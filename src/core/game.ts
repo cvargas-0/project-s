@@ -1,10 +1,13 @@
 import { Application } from "pixi.js";
 import { Player } from "../entities/player";
 import { createLoop } from "./loop";
+import { EnemySystem } from "../system/enemy";
 
 export class Game {
   private app!: Application;
   private player!: Player;
+
+  private enemySystem!: EnemySystem;
 
   public async start() {
     this.app = new Application();
@@ -20,10 +23,14 @@ export class Game {
     await document.body.appendChild(this.app.canvas);
 
     this.player = new Player(640, 360);
+    this.enemySystem = new EnemySystem(this.app.stage, this.player);
+
     this.app.stage.addChild(this.player.sprite);
 
     createLoop(this.app, (delta) => {
+      const deltaMs = this.app.ticker.deltaMS;
       this.player.update(delta);
+      this.enemySystem.update(deltaMs);
     });
   }
 }

@@ -4,13 +4,13 @@ import { Input } from "../core/input";
 export class Player {
   public sprite: Graphics;
 
-  private speed = 14;
+  private speed = 4;
   private input = new Input();
 
   constructor(x: number, y: number) {
     this.sprite = new Graphics();
     this.sprite.circle(0, 0, 20);
-    this.sprite.fill(0xff0000);
+    this.sprite.fill(0x38bdf8);
 
     this.sprite.x = x;
     this.sprite.y = y;
