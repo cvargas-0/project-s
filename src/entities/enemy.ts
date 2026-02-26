@@ -47,7 +47,7 @@ export class Enemy {
     this.hp -= damage;
     if (this.hp <= 0) {
       this.isAlive = false;
-      this.sprite.destroy();
+      //   this.sprite.destroy();
     }
   }
 }

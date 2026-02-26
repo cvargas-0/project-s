@@ -23,11 +23,21 @@ export class EnemySystem {
       this.spawnEnemy();
     }
 
-    this.enemies = this.enemies.filter((enemy) => enemy.isAlive);
+    this.enemies = this.enemies.filter((enemy) => {
+      if (!enemy.isAlive) {
+        enemy.sprite.destroy();
+        return false;
+      }
+      return true;
+    });
 
     for (const enemy of this.enemies) {
       enemy.update(deltaMS / 16.666, this.player);
     }
+  }
+
+  public getEnemies(): Enemy[] {
+    return this.enemies;
   }
 
   /**
