@@ -81,18 +81,8 @@ export class Game {
       console.log("RESUMED");
     }
   }
-  handleGlobalInput() {
-    // Press Space to pause
-    if (this.input.isDown("Space")) {
-      if (this.state === State.RUNNING) {
-        this.state = State.PAUSED;
-        console.log("PAUSED");
-      } else if (this.state === State.PAUSED) {
-        this.state = State.RUNNING;
-        console.log("RESUMED");
-      }
-    }
 
+  private handleGlobalInput() {
     // Press R to restart
     if (this.input.wasPressed("KeyR")) {
       this.reset();
