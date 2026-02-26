@@ -26,10 +26,10 @@ export class Player {
     let dx = 0;
     let dy = 0;
 
-    if (this.input.isDown("KeyW")) dy -= 1;
-    if (this.input.isDown("KeyS")) dy += 1;
-    if (this.input.isDown("KeyA")) dx -= 1;
-    if (this.input.isDown("KeyD")) dx += 1;
+    if (this.input.isDown("KeyW") || this.input.isDown("ArrowUp")) dy -= 1;
+    if (this.input.isDown("KeyS") || this.input.isDown("ArrowDown")) dy += 1;
+    if (this.input.isDown("KeyA") || this.input.isDown("ArrowLeft")) dx -= 1;
+    if (this.input.isDown("KeyD") || this.input.isDown("ArrowRight")) dx += 1;
 
     // Normalize diagonal movement
     const length = Math.hypot(dx, dy);
