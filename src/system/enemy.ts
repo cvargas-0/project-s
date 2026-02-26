@@ -33,6 +33,16 @@ export class EnemySystem {
 
     for (const enemy of this.enemies) {
       enemy.update(deltaMS / 16.666, this.player);
+
+      // Check collision with player
+
+      const dx = enemy.sprite.x - this.player.sprite.x;
+      const dy = enemy.sprite.y - this.player.sprite.y;
+      const distance = Math.hypot(dx, dy);
+
+      if (distance < 30) {
+        this.player.takeDamage(1);
+      }
     }
   }
 

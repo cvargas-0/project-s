@@ -7,6 +7,12 @@ export class Player {
   private speed = 4;
   private input = new Input();
 
+  private maxHp = 10;
+  private hp = 10;
+  private isInvulnerable = false;
+  private invulnerableDuration = 500; // ms
+  private invulnerableTimer = 0;
+
   constructor(x: number, y: number) {
     this.sprite = new Graphics();
     this.sprite.circle(0, 0, 20);
@@ -33,5 +39,29 @@ export class Player {
     }
     this.sprite.x += dx * this.speed * delta;
     this.sprite.y += dy * this.speed * delta;
+
+    // Check invulnerability
+    if (this.isInvulnerable) {
+      this.invulnerableTimer += delta * 16.666; // Convert to ms
+      if (this.invulnerableTimer >= this.invulnerableDuration) {
+        this.isInvulnerable = false;
+        this.sprite.tint = 0xffffff; // Reset tint
+      }
+    }
+  }
+
+  public takeDamage(damage: number): void {
+    if (this.isInvulnerable) return;
+
+    this.hp -= damage;
+    this.isInvulnerable = true;
+    this.invulnerableTimer = 0;
+
+    // feedback effect simple
+    this.sprite.tint = 0xff0000;
+  }
+
+  public isAlive(): boolean {
+    return this.hp > 0;
   }
 }

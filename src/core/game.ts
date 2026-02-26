@@ -40,6 +40,12 @@ export class Game {
       this.player.update(delta);
       this.enemySystem.update(deltaMs);
       this.combatSystem.update(delta, deltaMs);
+
+      // check player death
+      if (!this.player.isAlive()) {
+        console.log("Game over");
+        this.app.ticker.stop();
+      }
     });
   }
 }
