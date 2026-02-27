@@ -33,8 +33,13 @@ export class Hud {
   private xpText: Text;
 
   private timerText: Text;
+  private banner: Text | null = null;
+  private bannerTimer = 0;
+  private bannerDuration = 0;
+  private container: Container;
 
   constructor(container: Container) {
+    this.container = container;
     this.hpBg = new Graphics();
     this.hpFill = new Graphics();
     this.hpText = new Text({ text: "", style: STYLE });
@@ -44,8 +49,7 @@ export class Hud {
     this.xpText = new Text({ text: "", style: STYLE });
 
     this.timerText = new Text({ text: "00:00", style: TIMER_STYLE });
-    this.timerText.anchor.set(1, 0); // right-align
-    this.timerText.x = 1280 - PAD;
+    this.timerText.anchor.set(1, 0);
     this.timerText.y = PAD;
 
     for (const el of [
@@ -61,11 +65,14 @@ export class Hud {
     }
   }
 
-  public update(player: Player, xp: XpSystem, elapsedSeconds: number): void {
+  public update(player: Player, xp: XpSystem, elapsedSeconds: number, screenW: number, screenH: number): void {
     const hp = player.getHp();
     const maxHp = player.getMaxHp();
     const hpY = PAD;
-    const xpY = 720 - PAD - BAR_H;
+    const xpY = screenH - PAD - BAR_H;
+
+    // Reposition dynamic elements
+    this.timerText.x = screenW - PAD;
 
     // HP bar
     this.hpBg.clear().rect(PAD, hpY, BAR_W, BAR_H).fill({ color: 0x1e293b });
@@ -95,9 +102,49 @@ export class Hud {
 
     // Timer (top-right)
     this.timerText.text = fmtTime(elapsedSeconds);
+
+    // Fade banner over its duration
+    if (this.banner && this.bannerDuration > 0) {
+      this.bannerTimer += 16.666; // approximate frame ms
+      const progress = this.bannerTimer / this.bannerDuration;
+      if (progress >= 1) {
+        this.hideBanner();
+      } else {
+        // Full opacity first 70%, then fade out
+        this.banner.alpha = progress < 0.7 ? 1 : 1 - (progress - 0.7) / 0.3;
+      }
+    }
+  }
+
+  public showBanner(name: string, color: number, duration: number): void {
+    this.hideBanner();
+    this.banner = new Text({
+      text: name,
+      style: new TextStyle({
+        fill: color,
+        fontSize: 32,
+        fontFamily: "monospace",
+        fontWeight: "bold",
+        stroke: { color: 0x000000, width: 4 },
+      }),
+    });
+    this.banner.anchor.set(0.5);
+    this.banner.x = window.innerWidth / 2;
+    this.banner.y = 80;
+    this.bannerTimer = 0;
+    this.bannerDuration = duration;
+    this.container.addChild(this.banner);
+  }
+
+  public hideBanner(): void {
+    if (this.banner) {
+      this.banner.destroy();
+      this.banner = null;
+    }
   }
 
   public destroy(): void {
+    this.hideBanner();
     for (const el of [
       this.hpBg,
       this.hpFill,

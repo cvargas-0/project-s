@@ -50,8 +50,9 @@ export class Projectile {
     }
   }
 
-  public checkCollision(enemy: Enemy): void {
-    if (!enemy.isAlive || !this.isAlive) return;
+  /** Returns damage dealt (0 if no hit) */
+  public checkCollision(enemy: Enemy): number {
+    if (!enemy.isAlive || !this.isAlive) return 0;
 
     const dx = enemy.sprite.x - this.sprite.x;
     const dy = enemy.sprite.y - this.sprite.y;
@@ -59,7 +60,9 @@ export class Projectile {
     if (Math.hypot(dx, dy) < 20) {
       enemy.takeDamage(this.damage);
       this.deactivate();
+      return this.damage;
     }
+    return 0;
   }
 
   /** Mark inactive — the pool removes the sprite from the container */

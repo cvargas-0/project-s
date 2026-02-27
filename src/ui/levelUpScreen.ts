@@ -2,8 +2,6 @@ import { Graphics, Text, TextStyle } from "pixi.js";
 import type { Container } from "pixi.js";
 import type { Upgrade } from "../data/upgrades";
 
-const W = 1280;
-const H = 720;
 const CARD_W = 240;
 const CARD_H = 150;
 const GAP = 32;
@@ -29,7 +27,10 @@ export class LevelUpScreen {
 
     // Backdrop
     const bg = new Graphics();
-    bg.rect(0, 0, W, H).fill({ color: 0x000000, alpha: 0.75 });
+    bg.rect(0, 0, window.innerWidth, window.innerHeight).fill({
+      color: 0x000000,
+      alpha: 0.75,
+    });
     this.container.addChild(bg);
     this.elements.push(bg);
 
@@ -44,7 +45,7 @@ export class LevelUpScreen {
       }),
     });
     title.anchor.set(0.5);
-    title.x = W / 2;
+    title.x = window.innerWidth / 2;
     title.y = 190;
     this.container.addChild(title);
     this.elements.push(title);
@@ -58,14 +59,14 @@ export class LevelUpScreen {
       }),
     });
     sub.anchor.set(0.5);
-    sub.x = W / 2;
+    sub.x = window.innerWidth / 2;
     sub.y = 245;
     this.container.addChild(sub);
     this.elements.push(sub);
 
     // Cards
     const totalW = CARD_W * upgrades.length + GAP * (upgrades.length - 1);
-    const startX = (W - totalW) / 2;
+    const startX = (window.innerWidth - totalW) / 2;
     const cardY = 300;
 
     upgrades.forEach((upgrade, i) => {
@@ -83,7 +84,7 @@ export class LevelUpScreen {
       }),
     });
     hint.anchor.set(0.5);
-    hint.x = W / 2;
+    hint.x = window.innerWidth / 2;
     hint.y = cardY + CARD_H + 30;
     this.container.addChild(hint);
     this.elements.push(hint);

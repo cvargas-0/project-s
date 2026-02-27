@@ -2,6 +2,7 @@ import type { Container } from "pixi.js";
 import { Player } from "../entities/player";
 import { DifficultySystem } from "./difficulty";
 import { EnemyPool } from "../pool/enemyPool";
+import { WaveSystem } from "./waves";
 import type { Enemy } from "../entities/enemy";
 
 export class EnemySystem {
@@ -9,6 +10,7 @@ export class EnemySystem {
   private spawnTimer = 0;
 
   private readonly pool: EnemyPool;
+  private readonly waves: WaveSystem;
   private player: Player;
   private difficulty: DifficultySystem;
   private onEnemyDied?: (
@@ -17,28 +19,50 @@ export class EnemySystem {
     xp: number,
     isBoss: boolean,
   ) => void;
-  private onPlayerHit?: () => void;
+  private onPlayerHit?: (damageTaken: number) => void;
+  private onWaveStart?: (name: string) => void;
+
+  /** Camera viewport — updated by game loop for camera-relative spawning */
+  public camX = 0;
+  public camY = 0;
+  public viewW = 1280;
+  public viewH = 720;
 
   constructor(
     container: Container,
     player: Player,
     difficulty: DifficultySystem,
     onEnemyDied?: (x: number, y: number, xp: number, isBoss: boolean) => void,
-    onPlayerHit?: () => void,
+    onPlayerHit?: (damageTaken: number) => void,
+    onWaveStart?: (name: string) => void,
   ) {
     this.pool = new EnemyPool(container);
+    this.waves = new WaveSystem();
     this.player = player;
     this.difficulty = difficulty;
     this.onEnemyDied = onEnemyDied;
     this.onPlayerHit = onPlayerHit;
+    this.onWaveStart = onWaveStart;
   }
 
   public update(deltaMs: number): void {
-    this.spawnTimer += deltaMs;
+    // Check for wave trigger
+    const waveName = this.waves.update(
+      deltaMs,
+      (x, y, hp, speed, xp, isBoss) => this.spawnEnemyAt(x, y, hp, speed, xp, isBoss),
+      this.player.sprite.x,
+      this.player.sprite.y,
+      this.difficulty,
+    );
+    if (waveName) this.onWaveStart?.(waveName);
 
-    if (this.spawnTimer >= this.difficulty.spawnInterval) {
-      this.spawnTimer = 0;
-      this.spawnEnemy();
+    // Normal trickle spawning (suppressed during waves)
+    if (!this.waves.isSuppressing) {
+      this.spawnTimer += deltaMs;
+      if (this.spawnTimer >= this.difficulty.spawnInterval) {
+        this.spawnTimer = 0;
+        this.spawnEnemy();
+      }
     }
 
     if (this.difficulty.checkBossSpawn()) {
@@ -63,8 +87,8 @@ export class EnemySystem {
       const dx = enemy.sprite.x - this.player.sprite.x;
       const dy = enemy.sprite.y - this.player.sprite.y;
       if (Math.hypot(dx, dy) < enemy.collisionRadius) {
-        const hit = this.player.takeDamage(enemy.contactDamage);
-        if (hit) this.onPlayerHit?.();
+        const dmg = this.player.takeDamage(enemy.contactDamage);
+        if (dmg) this.onPlayerHit?.(dmg);
       }
 
       next.push(enemy);
@@ -76,9 +100,22 @@ export class EnemySystem {
     return this.enemies;
   }
 
+  /** Spawn an enemy at arbitrary world position — used by WaveSystem */
+  public spawnEnemyAt(
+    x: number,
+    y: number,
+    hp: number,
+    speed: number,
+    xp: number,
+    isBoss: boolean,
+  ): void {
+    const enemy = this.pool.acquire(x, y, hp, speed, xp, isBoss);
+    this.enemies.push(enemy);
+  }
+
   public spawnEnemy(): void {
     const [x, y] = this.randomEdgePosition();
-    const enemy = this.pool.acquire(
+    this.spawnEnemyAt(
       x,
       y,
       this.difficulty.enemyHp,
@@ -86,12 +123,11 @@ export class EnemySystem {
       this.difficulty.enemyXp,
       false,
     );
-    this.enemies.push(enemy);
   }
 
   public spawnBoss(): void {
     const [x, y] = this.randomEdgePosition();
-    const boss = this.pool.acquire(
+    this.spawnEnemyAt(
       x,
       y,
       this.difficulty.bossHp,
@@ -99,7 +135,6 @@ export class EnemySystem {
       this.difficulty.bossXp,
       true,
     );
-    this.enemies.push(boss);
   }
 
   /** Release all active enemies and destroy the free pool — call before game reset */
@@ -109,6 +144,7 @@ export class EnemySystem {
     }
     this.enemies = [];
     this.pool.destroyAll();
+    this.waves.reset();
     this.spawnTimer = 0;
   }
 
@@ -117,13 +153,13 @@ export class EnemySystem {
     const side = Math.floor(Math.random() * 4);
     switch (side) {
       case 0:
-        return [Math.random() * 1280, -margin]; // top
+        return [this.camX + Math.random() * this.viewW, this.camY - margin];
       case 1:
-        return [Math.random() * 1280, 720 + margin]; // bottom
+        return [this.camX + Math.random() * this.viewW, this.camY + this.viewH + margin];
       case 2:
-        return [-margin, Math.random() * 720]; // left
+        return [this.camX - margin, this.camY + Math.random() * this.viewH];
       default:
-        return [1280 + margin, Math.random() * 720]; // right
+        return [this.camX + this.viewW + margin, this.camY + Math.random() * this.viewH];
     }
   }
 }

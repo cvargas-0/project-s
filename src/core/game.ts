@@ -14,6 +14,12 @@ import { getRandomUpgrades } from "../data/upgrades";
 import { Hud } from "../ui/hud";
 import { LevelUpScreen } from "../ui/levelUpScreen";
 import { StateOverlay } from "../ui/overlay";
+import { createRunStats, type RunStats } from "./runStats";
+import { EventSystem } from "../system/events";
+import { Camera } from "./camera";
+
+const WORLD_W = 3000;
+const WORLD_H = 3000;
 
 export class Game {
   private app!: Application;
@@ -35,16 +41,17 @@ export class Game {
   private hud!: Hud;
   private levelUpScreen!: LevelUpScreen;
   private overlay!: StateOverlay;
+  private runStats!: RunStats;
+  private events!: EventSystem;
+  private camera!: Camera;
 
   public async start() {
     this.app = new Application();
 
     await this.app.init({
-      width: 1280,
-      height: 720,
       backgroundColor: 0x0f172a,
       antialias: false,
-      resolution: window.devicePixelRatio || 1,
+      resizeTo: window,
     });
 
     document.body.appendChild(this.app.canvas);
@@ -55,14 +62,29 @@ export class Game {
       const deltaMs = this.app.ticker.deltaMS;
       this.handleGlobalInput();
 
+      // Keep camera viewport synced with window size
+      this.camera.viewportWidth = this.app.screen.width;
+      this.camera.viewportHeight = this.app.screen.height;
+
       // Screen shake runs even while paused so it can finish naturally
       this.screenShake.update(deltaMs);
+      // Camera + shake always applied so paused view stays correct
+      this.camera.update(this.player.sprite.x, this.player.sprite.y);
+      this.camera.applyTo(this.world, this.screenShake.offsetX, this.screenShake.offsetY);
 
       if (this.state !== State.RUNNING) return;
 
+      this.events.update(deltaMs);
       this.difficulty.update(deltaMs);
       this.player.update(delta);
+
+      // Feed camera viewport to enemy spawning
+      this.enemySystem.camX = this.camera.x;
+      this.enemySystem.camY = this.camera.y;
+      this.enemySystem.viewW = this.app.screen.width;
+      this.enemySystem.viewH = this.app.screen.height;
       this.enemySystem.update(deltaMs);
+
       this.combatSystem.update(delta, deltaMs);
       this.particles.update(deltaMs);
 
@@ -74,6 +96,8 @@ export class Game {
         this.player,
         this.xpSystem,
         this.difficulty.elapsedSeconds,
+        this.app.screen.width,
+        this.app.screen.height,
       );
 
       if (!this.player.isAlive()) {
@@ -81,6 +105,7 @@ export class Game {
         this.overlay.showGameOver(
           this.difficulty.elapsedSeconds,
           this.xpSystem.level,
+          this.runStats,
         );
       }
     });
@@ -88,24 +113,37 @@ export class Game {
 
   private setup(): void {
     this.stats = createStats();
-    this.difficulty = new DifficultySystem();
+    this.runStats = createRunStats();
+    this.events = new EventSystem(
+      (name, color, duration) => this.hud.showBanner(name, color, duration),
+      () => this.hud.hideBanner(),
+    );
+    this.difficulty = new DifficultySystem(this.events);
 
-    // World container: all game entities live here so shaking is isolated from HUD
+    // World container: all game entities live here so camera + shake are applied to it
     this.world = new Container();
     this.app.stage.addChild(this.world);
 
-    this.player = new Player(640, 360, this.stats);
+    this.camera = new Camera(WORLD_W, WORLD_H);
+    this.screenShake = new ScreenShake();
+
+    this.player = new Player(WORLD_W / 2, WORLD_H / 2, this.stats, WORLD_W, WORLD_H);
     this.world.addChild(this.player.sprite);
 
-    this.xpSystem = new XpSystem(this.world);
+    this.xpSystem = new XpSystem(this.world, (amount) => {
+      this.runStats.totalXpCollected += amount;
+    });
     this.particles = new ParticleSystem(this.world);
-    this.screenShake = new ScreenShake(this.world);
 
     this.enemySystem = new EnemySystem(
       this.world,
       this.player,
       this.difficulty,
-      (x, y, xp, isBoss) => {
+      (x, y, baseXp, isBoss) => {
+        if (isBoss) this.runStats.bossesKilled++;
+        else this.runStats.enemiesKilled++;
+
+        const xp = Math.round(baseXp * this.events.xpMultiplier);
         const orbCount = isBoss
           ? this.difficulty.bossOrbCount
           : this.difficulty.enemyOrbCount;
@@ -129,7 +167,11 @@ export class Game {
         );
         if (isBoss) this.screenShake.trigger(10, 500);
       },
-      () => this.screenShake.trigger(5, 300),
+      (dmg) => {
+        this.runStats.totalDamageTaken += dmg;
+        this.screenShake.trigger(5, 300);
+      },
+      (waveName) => this.hud.showBanner(waveName, 0xfbbf24, 3000),
     );
 
     this.combatSystem = new CombatSystem(
@@ -137,6 +179,8 @@ export class Game {
       this.player,
       this.stats,
       () => this.enemySystem.getEnemies(),
+      (amount) => { this.runStats.totalDamageDealt += amount; },
+      () => this.events.damageMultiplier,
     );
 
     // UI stays on stage — unaffected by world shake
@@ -151,6 +195,7 @@ export class Game {
     const upgrades = getRandomUpgrades(3);
     this.levelUpScreen.show(this.xpSystem.level, upgrades, (chosen) => {
       chosen.apply(this.stats, (amount) => this.player.heal(amount));
+      this.runStats.upgradesChosen.push(chosen.name);
       this.levelUpScreen.hide();
       this.state = State.RUNNING;
     });
@@ -181,6 +226,7 @@ export class Game {
 
   private reset(): void {
     // Clean up pools and active sprites before tearing down containers
+    this.events.reset();
     this.combatSystem.reset();
     this.enemySystem.reset();
     this.particles.reset();

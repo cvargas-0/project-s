@@ -1,6 +1,13 @@
+import type { EventSystem } from "./events";
+
 export class DifficultySystem {
   private elapsedMs = 0;
   private bossCount = 0;
+  private events?: EventSystem;
+
+  constructor(events?: EventSystem) {
+    this.events = events;
+  }
 
   get elapsedSeconds(): number {
     return this.elapsedMs / 1000;
@@ -9,17 +16,20 @@ export class DifficultySystem {
   /** Spawn interval in ms — decreases every 30s, floor at 200ms */
   get spawnInterval(): number {
     const stages = Math.floor(this.elapsedSeconds / 30);
-    return Math.max(200, 1000 - stages * 80);
+    const base = Math.max(200, 1000 - stages * 80);
+    return base / (this.events?.spawnRateMultiplier ?? 1);
   }
 
   /** Enemy HP — increases every 60s */
   get enemyHp(): number {
-    return 3 + Math.floor(this.elapsedSeconds / 60);
+    const base = 3 + Math.floor(this.elapsedSeconds / 60);
+    return Math.round(base * (this.events?.enemyHpMultiplier ?? 1));
   }
 
   /** Enemy move speed — increases every 90s, cap at 3.5 */
   get enemySpeed(): number {
-    return Math.min(3.5, 1.5 + Math.floor(this.elapsedSeconds / 90) * 0.2);
+    const base = Math.min(3.5, 1.5 + Math.floor(this.elapsedSeconds / 90) * 0.2);
+    return base * (this.events?.enemySpeedMultiplier ?? 1);
   }
 
   /**

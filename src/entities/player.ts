@@ -13,16 +13,23 @@ export class Player {
   private invulnerableTimer = 0;
 
   private regenAccum = 0; // accumulated HP from regen
+  private worldWidth: number;
+  private worldHeight: number;
+  private readonly RADIUS = 20;
 
   constructor(
     x: number,
     y: number,
     private stats: PlayerStats,
+    worldWidth = 1280,
+    worldHeight = 720,
   ) {
+    this.worldWidth = worldWidth;
+    this.worldHeight = worldHeight;
     this.hp = stats.maxHp;
 
     this.sprite = new Graphics();
-    this.sprite.circle(0, 0, 20);
+    this.sprite.circle(0, 0, this.RADIUS);
     this.sprite.fill(0x38bdf8);
     this.sprite.x = x;
     this.sprite.y = y;
@@ -47,6 +54,10 @@ export class Player {
     this.sprite.x += dx * this.stats.speed * delta;
     this.sprite.y += dy * this.stats.speed * delta;
 
+    // Clamp to world bounds
+    this.sprite.x = Math.max(this.RADIUS, Math.min(this.worldWidth - this.RADIUS, this.sprite.x));
+    this.sprite.y = Math.max(this.RADIUS, Math.min(this.worldHeight - this.RADIUS, this.sprite.y));
+
     // Invulnerability timer
     if (this.isInvulnerable) {
       this.invulnerableTimer += deltaMs;
@@ -66,16 +77,16 @@ export class Player {
     }
   }
 
-  /** Returns true if damage was actually applied (not blocked by invulnerability) */
-  public takeDamage(damage: number): boolean {
-    if (this.isInvulnerable) return false;
+  /** Returns actual damage dealt (0 if blocked by invulnerability) */
+  public takeDamage(damage: number): number {
+    if (this.isInvulnerable) return 0;
 
     const actual = Math.max(1, damage - this.stats.armor);
     this.hp -= actual;
     this.isInvulnerable = true;
     this.invulnerableTimer = 0;
     this.sprite.tint = 0xff0000;
-    return true;
+    return actual;
   }
 
   public heal(amount: number): void {

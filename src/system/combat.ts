@@ -16,16 +16,22 @@ export class CombatSystem {
   private player: Player;
   private stats: PlayerStats;
   private getEnemies: () => Enemy[];
+  private onDamageDealt?: (amount: number) => void;
+  private getDamageMultiplier: () => number;
 
   constructor(
     container: Container,
     player: Player,
     stats: PlayerStats,
     getEnemies: () => Enemy[],
+    onDamageDealt?: (amount: number) => void,
+    getDamageMultiplier: () => number = () => 1,
   ) {
     this.player = player;
     this.stats = stats;
     this.getEnemies = getEnemies;
+    this.onDamageDealt = onDamageDealt;
+    this.getDamageMultiplier = getDamageMultiplier;
     this.pool = new ProjectilePool(container);
     this.grid = new SpatialGrid(64);
   }
@@ -59,7 +65,8 @@ export class CombatSystem {
       if (p.isAlive) {
         const nearby = this.grid.query(p.sprite.x, p.sprite.y);
         for (const enemy of nearby) {
-          p.checkCollision(enemy);
+          const dmg = p.checkCollision(enemy);
+          if (dmg) this.onDamageDealt?.(dmg);
           if (!p.isAlive) break;
         }
       }
@@ -96,13 +103,13 @@ export class CombatSystem {
       const cos = Math.cos(angleOffset);
       const sin = Math.sin(angleOffset);
 
-      // Acquire from pool — no new allocation if pool has free instances
+      const damage = Math.round(this.stats.damage * this.getDamageMultiplier());
       const p = this.pool.acquire(
         this.player.sprite.x,
         this.player.sprite.y,
         dirX * cos - dirY * sin,
         dirX * sin + dirY * cos,
-        this.stats.damage,
+        damage,
         this.stats.projectileSpeed,
       );
       this.projectiles.push(p);

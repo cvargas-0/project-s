@@ -1,11 +1,10 @@
-import type { Container } from "pixi.js";
-
 export class ScreenShake {
+  public offsetX = 0;
+  public offsetY = 0;
+
   private intensity = 0;
   private duration = 0;
   private timer = 0;
-
-  constructor(private target: Container) {}
 
   /** Start a shake. A stronger shake always overrides a weaker one. */
   trigger(intensity: number, durationMs: number): void {
@@ -18,24 +17,24 @@ export class ScreenShake {
 
   update(deltaMs: number): void {
     if (this.timer >= this.duration) {
-      this.target.position.set(0, 0);
+      this.offsetX = 0;
+      this.offsetY = 0;
       return;
     }
 
     this.timer += deltaMs;
     const progress = this.timer / this.duration;
-    const mag = this.intensity * (1 - progress); // fade out over time
+    const mag = this.intensity * (1 - progress);
 
-    this.target.position.set(
-      (Math.random() * 2 - 1) * mag,
-      (Math.random() * 2 - 1) * mag,
-    );
+    this.offsetX = (Math.random() * 2 - 1) * mag;
+    this.offsetY = (Math.random() * 2 - 1) * mag;
   }
 
   reset(): void {
     this.intensity = 0;
     this.duration = 0;
     this.timer = 0;
-    this.target.position.set(0, 0);
+    this.offsetX = 0;
+    this.offsetY = 0;
   }
 }

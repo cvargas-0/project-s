@@ -9,9 +9,11 @@ export class XpSystem {
 
   private orbs: XpOrb[] = [];
   private readonly container: Container;
+  private onXpGained?: (amount: number) => void;
 
-  constructor(container: Container) {
+  constructor(container: Container, onXpGained?: (amount: number) => void) {
     this.container = container;
+    this.onXpGained = onXpGained;
   }
 
   public spawnOrb(x: number, y: number, xpValue: number): void {
@@ -36,6 +38,7 @@ export class XpSystem {
       const gained = orb.update(delta, player);
       if (gained > 0) {
         this.xp += gained;
+        this.onXpGained?.(gained);
         if (this.xp >= this.xpToNext) {
           this.xp -= this.xpToNext;
           this.level += 1;
