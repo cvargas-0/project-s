@@ -3,8 +3,13 @@ import { Player } from "../entities/player";
 import { createLoop } from "./loop";
 import { EnemySystem } from "../system/enemy";
 import { CombatSystem } from "../system/combat";
+import { XpSystem } from "../system/xp";
 import { State } from "./state";
 import { Input } from "./input";
+import { createStats, type PlayerStats } from "./playerStats";
+import { getRandomUpgrades } from "../data/upgrades";
+import { Hud } from "../ui/hud";
+import { LevelUpScreen } from "../ui/levelUpScreen";
 
 export class Game {
   private app!: Application;
@@ -13,10 +18,12 @@ export class Game {
   private input: Input = new Input();
 
   private player!: Player;
-
+  private stats!: PlayerStats;
   private enemySystem!: EnemySystem;
-
   private combatSystem!: CombatSystem;
+  private xpSystem!: XpSystem;
+  private hud!: Hud;
+  private levelUpScreen!: LevelUpScreen;
 
   public async start() {
     this.app = new Application();
@@ -29,20 +36,12 @@ export class Game {
       resolution: window.devicePixelRatio || 1,
     });
 
-    await document.body.appendChild(this.app.canvas);
+    document.body.appendChild(this.app.canvas);
 
-    this.player = new Player(640, 360);
-    this.enemySystem = new EnemySystem(this.app.stage, this.player);
-
-    this.combatSystem = new CombatSystem(this.app.stage, this.player, () =>
-      this.enemySystem.getEnemies(),
-    );
-
-    this.app.stage.addChild(this.player.sprite);
+    this.setup();
 
     createLoop(this.app, (delta) => {
       const deltaMs = this.app.ticker.deltaMS;
-
       this.handleGlobalInput();
 
       if (this.state !== State.RUNNING) return;
@@ -51,22 +50,66 @@ export class Game {
       this.enemySystem.update(deltaMs);
       this.combatSystem.update(delta, deltaMs);
 
+      if (this.xpSystem.update(delta, this.player)) {
+        this.triggerLevelUp();
+      }
+
+      this.hud.update(this.player, this.xpSystem);
+
       if (!this.player.isAlive()) {
         this.state = State.GAME_OVER;
-        console.log("Game over");
       }
     });
   }
 
+  private setup(): void {
+    this.stats = createStats();
+
+    this.player = new Player(640, 360, this.stats);
+    this.app.stage.addChild(this.player.sprite);
+
+    this.xpSystem = new XpSystem(this.app.stage);
+
+    this.enemySystem = new EnemySystem(
+      this.app.stage,
+      this.player,
+      (x, y, xp) => this.xpSystem.spawnOrb(x, y, xp),
+    );
+
+    this.combatSystem = new CombatSystem(
+      this.app.stage,
+      this.player,
+      this.stats,
+      () => this.enemySystem.getEnemies(),
+    );
+
+    this.hud = new Hud(this.app.stage);
+    this.levelUpScreen = new LevelUpScreen(this.app.stage);
+  }
+
+  private triggerLevelUp(): void {
+    this.state = State.LEVEL_UP;
+
+    const upgrades = getRandomUpgrades(3);
+
+    this.levelUpScreen.show(this.xpSystem.level, upgrades, (chosen) => {
+      chosen.apply(this.stats, (amount) => this.player.heal(amount));
+      this.levelUpScreen.hide();
+      this.state = State.RUNNING;
+    });
+  }
+
   private handleGlobalInput(): void {
+    if (this.state === State.LEVEL_UP) {
+      if (this.input.wasPressed("Digit1")) this.levelUpScreen.pickByIndex(0);
+      if (this.input.wasPressed("Digit2")) this.levelUpScreen.pickByIndex(1);
+      if (this.input.wasPressed("Digit3")) this.levelUpScreen.pickByIndex(2);
+      return;
+    }
+
     if (this.input.wasPressed("Space")) {
-      if (this.state === State.RUNNING) {
-        this.state = State.PAUSED;
-        console.log("PAUSED");
-      } else if (this.state === State.PAUSED) {
-        this.state = State.RUNNING;
-        console.log("RESUMED");
-      }
+      if (this.state === State.RUNNING) this.state = State.PAUSED;
+      else if (this.state === State.PAUSED) this.state = State.RUNNING;
     }
 
     if (this.input.wasPressed("KeyR")) {
@@ -75,18 +118,10 @@ export class Game {
   }
 
   private reset(): void {
-    console.log("Reset");
-
+    this.levelUpScreen.hide();
+    this.hud.destroy();
     this.app.stage.removeChildren();
-
-    this.player = new Player(640, 360);
-    this.app.stage.addChild(this.player.sprite);
-
-    this.enemySystem = new EnemySystem(this.app.stage, this.player);
-    this.combatSystem = new CombatSystem(this.app.stage, this.player, () =>
-      this.enemySystem.getEnemies(),
-    );
-
+    this.setup();
     this.state = State.RUNNING;
   }
 }

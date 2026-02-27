@@ -5,15 +5,18 @@ export class Projectile {
   public sprite: Graphics;
   public isAlive: boolean = true;
 
-  private speed = 6; // px/s
-  private damage = 1; // hp
+  private speed: number;
   private lifeTime = 2000; // ms
   private lifeTimer = 0; // ms
 
   private dx: number;
   private dy: number;
+  private damage: number;
 
-  constructor(x: number, y: number, dx: number, dy: number) {
+  constructor(x: number, y: number, dx: number, dy: number, damage = 1, speed = 6) {
+    this.damage = damage;
+    this.speed = speed;
+
     this.sprite = new Graphics();
     this.sprite.circle(0, 0, 8);
     this.sprite.fill(0xfacc15);

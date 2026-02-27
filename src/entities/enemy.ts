@@ -4,6 +4,7 @@ import { Player } from "./player";
 export class Enemy {
   public sprite: Graphics;
   public isAlive: boolean = true;
+  public readonly xpValue = 20;
 
   private speed = 1.5;
   private hp = 3;

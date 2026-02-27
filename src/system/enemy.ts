@@ -9,10 +9,16 @@ export class EnemySystem {
 
   private container: Container;
   private player: Player;
+  private onEnemyDied?: (x: number, y: number, xp: number) => void;
 
-  constructor(container: Container, player: Player) {
+  constructor(
+    container: Container,
+    player: Player,
+    onEnemyDied?: (x: number, y: number, xp: number) => void,
+  ) {
     this.container = container;
     this.player = player;
+    this.onEnemyDied = onEnemyDied;
   }
 
   public update(deltaMS: number): void {
@@ -25,6 +31,7 @@ export class EnemySystem {
 
     this.enemies = this.enemies.filter((enemy) => {
       if (!enemy.isAlive) {
+        this.onEnemyDied?.(enemy.sprite.x, enemy.sprite.y, enemy.xpValue);
         enemy.sprite.destroy();
         return false;
       }
@@ -33,8 +40,6 @@ export class EnemySystem {
 
     for (const enemy of this.enemies) {
       enemy.update(deltaMS / 16.666, this.player);
-
-      // Check collision with player
 
       const dx = enemy.sprite.x - this.player.sprite.x;
       const dy = enemy.sprite.y - this.player.sprite.y;
@@ -50,9 +55,6 @@ export class EnemySystem {
     return this.enemies;
   }
 
-  /**
-   * Spawn a new enemy
-   */
   public spawnEnemy(): void {
     const margin = 100;
     const side = Math.floor(Math.random() * 4);
