@@ -106,7 +106,21 @@ export class Game {
       this.player,
       this.difficulty,
       (x, y, xp, isBoss) => {
-        this.xpSystem.spawnOrb(x, y, xp);
+        const orbCount = isBoss
+          ? this.difficulty.bossOrbCount
+          : this.difficulty.enemyOrbCount;
+        const xpPerOrb = Math.ceil(xp / orbCount);
+
+        for (let i = 0; i < orbCount; i++) {
+          const angle = (Math.PI * 2 * i) / orbCount;
+          const spread = 8 + orbCount * 2;
+          this.xpSystem.spawnOrb(
+            x + Math.cos(angle) * spread,
+            y + Math.sin(angle) * spread,
+            xpPerOrb,
+          );
+        }
+
         this.particles.burst(
           x,
           y,

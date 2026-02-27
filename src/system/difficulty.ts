@@ -40,6 +40,16 @@ export class DifficultySystem {
     return this.enemyXp * 8;
   }
 
+  /** Number of orbs a normal enemy drops — increases every 2 minutes */
+  get enemyOrbCount(): number {
+    return 1 + Math.floor(this.elapsedSeconds / 120);
+  }
+
+  /** Number of orbs a boss drops — always 3× enemy orb count */
+  get bossOrbCount(): number {
+    return this.enemyOrbCount * 3;
+  }
+
   update(deltaMs: number): void {
     this.elapsedMs += deltaMs;
   }
