@@ -166,6 +166,12 @@ export class Game {
   }
 
   private reset(): void {
+    // Clean up pools and active sprites before tearing down containers
+    this.combatSystem.reset();
+    this.enemySystem.reset();
+    this.particles.reset();
+    this.xpSystem.reset();
+
     this.overlay.hide();
     this.levelUpScreen.hide();
     this.hud.destroy();

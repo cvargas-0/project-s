@@ -7,40 +7,37 @@ export class Projectile {
 
   private speed: number;
   private lifeTime = 2000; // ms
-  private lifeTimer = 0; // ms
+  private lifeTimer = 0;
 
   private dx: number;
   private dy: number;
   private damage: number;
 
-  constructor(
-    x: number,
-    y: number,
-    dx: number,
-    dy: number,
-    damage = 1,
-    speed = 6,
-  ) {
+  constructor(x: number, y: number, dx: number, dy: number, damage = 1, speed = 6) {
     this.damage = damage;
     this.speed = speed;
-
-    this.sprite = new Graphics();
-    this.sprite.circle(0, 0, 8);
-    this.sprite.fill(0xfacc15);
-
-    this.sprite.x = x;
-    this.sprite.y = y;
-
     this.dx = dx;
     this.dy = dy;
+
+    // Sprite created once; container management is the pool's responsibility
+    this.sprite = new Graphics();
+    this.sprite.circle(0, 0, 8).fill(0xfacc15);
+    this.sprite.x = x;
+    this.sprite.y = y;
   }
 
-  /**
-   * Update projectile position
-   *
-   * @param delta
-   * @returns void
-   */
+  /** Re-initialise a pooled projectile for reuse */
+  public reset(x: number, y: number, dx: number, dy: number, damage: number, speed: number): void {
+    this.isAlive = true;
+    this.lifeTimer = 0;
+    this.dx = dx;
+    this.dy = dy;
+    this.damage = damage;
+    this.speed = speed;
+    this.sprite.x = x;
+    this.sprite.y = y;
+  }
+
   public update(delta: number, deltaMs: number): void {
     if (!this.isAlive) return;
 
@@ -49,36 +46,24 @@ export class Projectile {
 
     this.lifeTimer += deltaMs;
     if (this.lifeTimer >= this.lifeTime) {
-      this.destroy();
+      this.deactivate();
     }
   }
 
-  /**
-   * Take damage to the enemy
-   *
-   * @param damage
-   * @returns void
-   */
   public checkCollision(enemy: Enemy): void {
-    if (!enemy.isAlive) return;
-    if (!this.isAlive) return;
+    if (!enemy.isAlive || !this.isAlive) return;
+
     const dx = enemy.sprite.x - this.sprite.x;
     const dy = enemy.sprite.y - this.sprite.y;
 
-    const distance = Math.hypot(dx, dy);
-    if (distance < 20) {
+    if (Math.hypot(dx, dy) < 20) {
       enemy.takeDamage(this.damage);
-      this.destroy();
+      this.deactivate();
     }
   }
 
-  /**
-   * Destroy projectile
-   *
-   * @returns void
-   */
-  private destroy(): void {
+  /** Mark inactive — the pool removes the sprite from the container */
+  private deactivate(): void {
     this.isAlive = false;
-    this.sprite.destroy();
   }
 }

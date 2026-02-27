@@ -1,13 +1,14 @@
 import type { Container } from "pixi.js";
-import { Enemy } from "../entities/enemy";
 import { Player } from "../entities/player";
 import { DifficultySystem } from "./difficulty";
+import { EnemyPool } from "../pool/enemyPool";
+import type { Enemy } from "../entities/enemy";
 
 export class EnemySystem {
   private enemies: Enemy[] = [];
   private spawnTimer = 0;
 
-  private container: Container;
+  private readonly pool: EnemyPool;
   private player: Player;
   private difficulty: DifficultySystem;
   private onEnemyDied?: (
@@ -25,7 +26,7 @@ export class EnemySystem {
     onEnemyDied?: (x: number, y: number, xp: number, isBoss: boolean) => void,
     onPlayerHit?: () => void,
   ) {
-    this.container = container;
+    this.pool = new EnemyPool(container);
     this.player = player;
     this.difficulty = difficulty;
     this.onEnemyDied = onEnemyDied;
@@ -44,7 +45,8 @@ export class EnemySystem {
       this.spawnBoss();
     }
 
-    this.enemies = this.enemies.filter((enemy) => {
+    const next: Enemy[] = [];
+    for (const enemy of this.enemies) {
       if (!enemy.isAlive) {
         this.onEnemyDied?.(
           enemy.sprite.x,
@@ -52,46 +54,31 @@ export class EnemySystem {
           enemy.xpValue,
           enemy.isBoss,
         );
-        enemy.sprite.destroy();
-        return false;
+        this.pool.release(enemy);
+        continue;
       }
-      return true;
-    });
 
-    for (const enemy of this.enemies) {
       enemy.update(deltaMs / 16.666, this.player);
 
       const dx = enemy.sprite.x - this.player.sprite.x;
       const dy = enemy.sprite.y - this.player.sprite.y;
-      const distance = Math.hypot(dx, dy);
-
-      if (distance < enemy.collisionRadius) {
+      if (Math.hypot(dx, dy) < enemy.collisionRadius) {
         const hit = this.player.takeDamage(enemy.contactDamage);
         if (hit) this.onPlayerHit?.();
       }
+
+      next.push(enemy);
     }
+    this.enemies = next;
   }
 
   public getEnemies(): Enemy[] {
     return this.enemies;
   }
 
-  private spawnAt(
-    x: number,
-    y: number,
-    hp: number,
-    speed: number,
-    xpValue: number,
-    isBoss: boolean,
-  ): void {
-    const enemy = new Enemy(x, y, hp, speed, xpValue, isBoss);
-    this.enemies.push(enemy);
-    this.container.addChild(enemy.sprite);
-  }
-
   public spawnEnemy(): void {
     const [x, y] = this.randomEdgePosition();
-    this.spawnAt(
+    const enemy = this.pool.acquire(
       x,
       y,
       this.difficulty.enemyHp,
@@ -99,12 +86,12 @@ export class EnemySystem {
       this.difficulty.enemyXp,
       false,
     );
+    this.enemies.push(enemy);
   }
 
   public spawnBoss(): void {
     const [x, y] = this.randomEdgePosition();
-    // Boss is slow but very tanky
-    this.spawnAt(
+    const boss = this.pool.acquire(
       x,
       y,
       this.difficulty.bossHp,
@@ -112,6 +99,17 @@ export class EnemySystem {
       this.difficulty.bossXp,
       true,
     );
+    this.enemies.push(boss);
+  }
+
+  /** Release all active enemies and destroy the free pool — call before game reset */
+  public reset(): void {
+    for (const enemy of this.enemies) {
+      this.pool.release(enemy);
+    }
+    this.enemies = [];
+    this.pool.destroyAll();
+    this.spawnTimer = 0;
   }
 
   private randomEdgePosition(): [number, number] {

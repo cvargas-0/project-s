@@ -3,12 +3,16 @@ import { Projectile } from "../entities/projectile";
 import { Player } from "../entities/player";
 import { Enemy } from "../entities/enemy";
 import type { PlayerStats } from "../core/playerStats";
+import { ProjectilePool } from "../pool/projectilePool";
+import { SpatialGrid } from "./spatialGrid";
 
 export class CombatSystem {
   private projectiles: Projectile[] = [];
   private attackTimer = 0;
 
-  private container: Container;
+  private readonly pool: ProjectilePool;
+  private readonly grid: SpatialGrid;
+
   private player: Player;
   private stats: PlayerStats;
   private getEnemies: () => Enemy[];
@@ -19,10 +23,11 @@ export class CombatSystem {
     stats: PlayerStats,
     getEnemies: () => Enemy[],
   ) {
-    this.container = container;
     this.player = player;
     this.stats = stats;
     this.getEnemies = getEnemies;
+    this.pool = new ProjectilePool(container);
+    this.grid = new SpatialGrid(64);
   }
 
   public update(delta: number, deltaMs: number): void {
@@ -35,17 +40,37 @@ export class CombatSystem {
 
     const enemies = this.getEnemies();
 
-    for (const projectile of this.projectiles) {
-      if (!projectile.isAlive) continue;
-
-      projectile.update(delta, deltaMs);
-
-      for (const enemy of enemies) {
-        projectile.checkCollision(enemy);
-      }
+    // Rebuild spatial grid each frame — O(E)
+    this.grid.clear();
+    for (const enemy of enemies) {
+      if (enemy.isAlive) this.grid.insert(enemy);
     }
 
-    this.projectiles = this.projectiles.filter((p) => p.isAlive);
+    // Update projectiles and check collisions — O(P × k) instead of O(P × E)
+    const next: Projectile[] = [];
+    for (const p of this.projectiles) {
+      if (!p.isAlive) {
+        this.pool.release(p); // carry-over dead from last frame
+        continue;
+      }
+
+      p.update(delta, deltaMs);
+
+      if (p.isAlive) {
+        const nearby = this.grid.query(p.sprite.x, p.sprite.y);
+        for (const enemy of nearby) {
+          p.checkCollision(enemy);
+          if (!p.isAlive) break;
+        }
+      }
+
+      if (p.isAlive) {
+        next.push(p);
+      } else {
+        this.pool.release(p);
+      }
+    }
+    this.projectiles = next;
   }
 
   private autoAttack(): void {
@@ -64,25 +89,23 @@ export class CombatSystem {
     const dirY = dy / length;
 
     const count = this.stats.projectileCount;
-    const spread = count > 1 ? 0.2 : 0; // radians between projectiles
+    const spread = count > 1 ? 0.2 : 0;
 
     for (let i = 0; i < count; i++) {
       const angleOffset = (i - (count - 1) / 2) * spread;
       const cos = Math.cos(angleOffset);
       const sin = Math.sin(angleOffset);
-      const px = dirX * cos - dirY * sin;
-      const py = dirX * sin + dirY * cos;
 
-      const projectile = new Projectile(
+      // Acquire from pool — no new allocation if pool has free instances
+      const p = this.pool.acquire(
         this.player.sprite.x,
         this.player.sprite.y,
-        px,
-        py,
+        dirX * cos - dirY * sin,
+        dirX * sin + dirY * cos,
         this.stats.damage,
         this.stats.projectileSpeed,
       );
-      this.projectiles.push(projectile);
-      this.container.addChild(projectile.sprite);
+      this.projectiles.push(p);
     }
   }
 
@@ -101,7 +124,17 @@ export class CombatSystem {
         nearest = enemy;
       }
     }
-
     return nearest;
+  }
+
+  /** Destroy all active and pooled sprites — call before game reset */
+  public reset(): void {
+    for (const p of this.projectiles) {
+      p.sprite.parent?.removeChild(p.sprite);
+      p.sprite.destroy();
+    }
+    this.projectiles = [];
+    this.pool.destroyAll();
+    this.attackTimer = 0;
   }
 }

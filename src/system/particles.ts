@@ -57,7 +57,7 @@ export class ParticleSystem {
     });
   }
 
-  reset(): void {
+  public reset(): void {
     for (const p of this.particles) p.sprite.destroy();
     this.particles = [];
   }
