@@ -131,7 +131,7 @@ src/
 │   ├── projectilePool.ts       # Reuse Projectile instances (acquire/release)
 │   └── enemyPool.ts            # Reuse Enemy instances (acquire/release)
 ├── data/
-│   └── upgrades.ts             # 10 upgrades with stat modifiers
+│   └── upgrades.ts             # 20 upgrades with rarity system + weighted selection
 └── ui/
     ├── hud.ts                  # HP bar, XP bar, timer, event/wave banners
     ├── levelUpScreen.ts        # 3 upgrade cards with keyboard/click selection
@@ -246,6 +246,21 @@ While a wave is active (`isSuppressing = true`), normal trickle spawning is paus
 
 All stats are displayed on the Game Over overlay. Stats reset with the rest of the game on `R`.
 
+### Upgrade Rarity System
+
+Upgrades have 4 rarity tiers, each with a weighted probability:
+
+| Rarity    | Color  | Weight | Example upgrades                     |
+| --------- | ------ | ------ | ------------------------------------ |
+| Common    | Grey   | 50     | Swift Feet, Sharp Edge, Magnetism    |
+| Rare      | Blue   | 30     | Multishot, Thick Skin, Adrenaline    |
+| Epic      | Purple | 15     | Glass Cannon, Barrage, Fortress      |
+| Legendary | Gold   | 5      | Magnetize (collect all orbs)         |
+
+Trade-off upgrades give a powerful boost but reduce another stat (e.g. Glass Cannon: +4 damage, -4 max HP). The level-up screen shows rarity-colored borders and labels on each card.
+
+XP orbs always move faster than the player (`(speed + 2) × 1.5`) and their attract range is upgradeable via the `attractRange` stat.
+
 ### Reset Flow
 
 On game reset (R key), cleanup happens in order:
@@ -261,18 +276,22 @@ On game reset (R key), cleanup happens in order:
 
 ### Difficulty Progression
 
-All values scale with elapsed time (modified by EventSystem multipliers):
+All values scale with a combined **tier** that factors in both elapsed time and player level:
+
+```
+tier = elapsedSeconds / 20 + (playerLevel - 1) × 0.5
+```
 
 | Stat           | Formula                                          |
 | -------------- | ------------------------------------------------ |
-| Spawn interval | `max(200, 1000 - floor(t/30) × 80)` ms ÷ spawnRateMultiplier |
-| Enemy HP       | `(3 + floor(t/30))` × enemyHpMultiplier          |
-| Enemy speed    | `(1.5 + t/180)` × enemySpeedMultiplier           |
-| Enemy XP       | `floor(20 × (1 + t/120))` × xpMultiplier        |
-| Enemy orbs     | `1 + floor(t/120)` — +1 orb every 2 min         |
-| Boss HP        | `enemyHp × 8`                                   |
+| Spawn interval | `max(150, 1000 - tier × 60)` ms ÷ spawnRateMultiplier |
+| Enemy HP       | `(3 + floor(tier × 0.8))` × enemyHpMultiplier   |
+| Enemy speed    | `min(4.0, 1.5 + tier × 0.12)` × enemySpeedMultiplier |
+| Enemy XP       | `floor(20 × (1 + tier × 0.15))` × xpMultiplier  |
+| Enemy orbs     | `1 + floor(tier / 4)`                            |
+| Boss HP        | `(25 + bossCount × 10) × (1 + tier × 0.1)`      |
 | Boss XP        | `enemyXp × 8`                                   |
 | Boss orbs      | `enemyOrbCount × 3`                             |
-| Boss spawns    | Every 2 minutes starting at 3:00                |
+| Boss spawns    | At 2:00, then every 90s (3:30, 5:00, 6:30...)   |
 
 XP required per level: `level × 100`

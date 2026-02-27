@@ -7,6 +7,7 @@ export interface PlayerStats {
   projectileSpeed: number; // px/frame
   armor: number; // flat damage reduction per hit (min 1 always dealt)
   regenRate: number; // HP per second (0 = disabled)
+  attractRange: number; // px — XP orb magnet range
 }
 
 export function createStats(): PlayerStats {
@@ -19,5 +20,6 @@ export function createStats(): PlayerStats {
     projectileSpeed: 6,
     armor: 0,
     regenRate: 0,
+    attractRange: 120,
   };
 }

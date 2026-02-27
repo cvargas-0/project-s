@@ -1,10 +1,17 @@
 import { Graphics, Text, TextStyle } from "pixi.js";
 import type { Container } from "pixi.js";
-import type { Upgrade } from "../data/upgrades";
+import { RARITY_COLORS, type Upgrade } from "../data/upgrades";
 
 const CARD_W = 240;
-const CARD_H = 150;
+const CARD_H = 170;
 const GAP = 32;
+
+const RARITY_LABELS: Record<string, string> = {
+  common: "Common",
+  rare: "Rare",
+  epic: "Epic",
+  legendary: "Legendary",
+};
 
 export class LevelUpScreen {
   private elements: (Graphics | Text)[] = [];
@@ -36,7 +43,7 @@ export class LevelUpScreen {
 
     // Title
     const title = new Text({
-      text: `¡NIVEL ${level}!`,
+      text: `LEVEL ${level}!`,
       style: new TextStyle({
         fill: 0xfbbf24,
         fontSize: 40,
@@ -51,7 +58,7 @@ export class LevelUpScreen {
     this.elements.push(title);
 
     const sub = new Text({
-      text: "Elige una mejora",
+      text: "Choose an upgrade",
       style: new TextStyle({
         fill: 0xdde1e7,
         fontSize: 18,
@@ -76,7 +83,7 @@ export class LevelUpScreen {
 
     // Hint
     const hint = new Text({
-      text: "Clic o tecla [1] [2] [3]",
+      text: "Click or press [1] [2] [3]",
       style: new TextStyle({
         fill: 0x475569,
         fontSize: 13,
@@ -91,6 +98,7 @@ export class LevelUpScreen {
   }
 
   private buildCard(upgrade: Upgrade, num: number, x: number, y: number): void {
+    const rarityColor = RARITY_COLORS[upgrade.rarity];
     const card = new Graphics();
     const drawCard = (hover: boolean) => {
       card.clear();
@@ -99,7 +107,7 @@ export class LevelUpScreen {
         .fill({ color: hover ? 0x2d3f5e : 0x1e293b });
       card
         .roundRect(x, y, CARD_W, CARD_H, 12)
-        .stroke({ color: hover ? 0xa78bfa : 0x7c3aed, width: 2 });
+        .stroke({ color: hover ? 0xffffff : rarityColor, width: 2 });
     };
 
     drawCard(false);
@@ -115,7 +123,7 @@ export class LevelUpScreen {
     const badge = new Text({
       text: `[${num}]`,
       style: new TextStyle({
-        fill: 0x7c3aed,
+        fill: rarityColor,
         fontSize: 12,
         fontFamily: "monospace",
       }),
@@ -125,11 +133,27 @@ export class LevelUpScreen {
     this.container.addChild(badge);
     this.elements.push(badge);
 
+    // Rarity label (top-right)
+    const rarityLabel = new Text({
+      text: RARITY_LABELS[upgrade.rarity] ?? upgrade.rarity,
+      style: new TextStyle({
+        fill: rarityColor,
+        fontSize: 11,
+        fontFamily: "monospace",
+        fontWeight: "bold",
+      }),
+    });
+    rarityLabel.anchor.set(1, 0);
+    rarityLabel.x = x + CARD_W - 10;
+    rarityLabel.y = y + 8;
+    this.container.addChild(rarityLabel);
+    this.elements.push(rarityLabel);
+
     // Name
     const name = new Text({
       text: upgrade.name,
       style: new TextStyle({
-        fill: 0xfbbf24,
+        fill: rarityColor,
         fontSize: 20,
         fontFamily: "monospace",
         fontWeight: "bold",
@@ -137,7 +161,7 @@ export class LevelUpScreen {
     });
     name.anchor.set(0.5, 0);
     name.x = x + CARD_W / 2;
-    name.y = y + 20;
+    name.y = y + 28;
     this.container.addChild(name);
     this.elements.push(name);
 
@@ -154,7 +178,7 @@ export class LevelUpScreen {
     });
     desc.anchor.set(0.5, 0);
     desc.x = x + CARD_W / 2;
-    desc.y = y + 55;
+    desc.y = y + 62;
     this.container.addChild(desc);
     this.elements.push(desc);
   }

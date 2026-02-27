@@ -118,7 +118,7 @@ export class Game {
       (name, color, duration) => this.hud.showBanner(name, color, duration),
       () => this.hud.hideBanner(),
     );
-    this.difficulty = new DifficultySystem(this.events);
+    this.difficulty = new DifficultySystem(this.events, () => this.xpSystem?.level ?? 1);
 
     // World container: all game entities live here so camera + shake are applied to it
     this.world = new Container();
@@ -130,7 +130,7 @@ export class Game {
     this.player = new Player(WORLD_W / 2, WORLD_H / 2, this.stats, WORLD_W, WORLD_H);
     this.world.addChild(this.player.sprite);
 
-    this.xpSystem = new XpSystem(this.world, (amount) => {
+    this.xpSystem = new XpSystem(this.world, this.stats, (amount) => {
       this.runStats.totalXpCollected += amount;
     });
     this.particles = new ParticleSystem(this.world);
@@ -195,6 +195,7 @@ export class Game {
     const upgrades = getRandomUpgrades(3);
     this.levelUpScreen.show(this.xpSystem.level, upgrades, (chosen) => {
       chosen.apply(this.stats, (amount) => this.player.heal(amount));
+      if (chosen.id === "magnetize") this.xpSystem.collectAll();
       this.runStats.upgradesChosen.push(chosen.name);
       this.levelUpScreen.hide();
       this.state = State.RUNNING;
