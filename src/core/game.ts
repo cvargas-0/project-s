@@ -1,10 +1,12 @@
-import { Application } from "pixi.js";
+import { Application, Container } from "pixi.js";
 import { Player } from "../entities/player";
 import { createLoop } from "./loop";
 import { EnemySystem } from "../system/enemy";
 import { CombatSystem } from "../system/combat";
 import { XpSystem } from "../system/xp";
 import { DifficultySystem } from "../system/difficulty";
+import { ParticleSystem } from "../system/particles";
+import { ScreenShake } from "./screenShake";
 import { State } from "./state";
 import { Input } from "./input";
 import { createStats, type PlayerStats } from "./playerStats";
@@ -19,12 +21,17 @@ export class Game {
   private state: State = State.RUNNING;
   private input: Input = new Input();
 
+  // World container — only this shakes, HUD/UI stay on stage
+  private world!: Container;
+
   private player!: Player;
   private stats!: PlayerStats;
   private enemySystem!: EnemySystem;
   private combatSystem!: CombatSystem;
   private xpSystem!: XpSystem;
   private difficulty!: DifficultySystem;
+  private particles!: ParticleSystem;
+  private screenShake!: ScreenShake;
   private hud!: Hud;
   private levelUpScreen!: LevelUpScreen;
   private overlay!: StateOverlay;
@@ -48,12 +55,16 @@ export class Game {
       const deltaMs = this.app.ticker.deltaMS;
       this.handleGlobalInput();
 
+      // Screen shake runs even while paused so it can finish naturally
+      this.screenShake.update(deltaMs);
+
       if (this.state !== State.RUNNING) return;
 
       this.difficulty.update(deltaMs);
       this.player.update(delta);
       this.enemySystem.update(deltaMs);
       this.combatSystem.update(delta, deltaMs);
+      this.particles.update(deltaMs);
 
       if (this.xpSystem.update(delta, this.player)) {
         this.triggerLevelUp();
@@ -72,25 +83,37 @@ export class Game {
     this.stats = createStats();
     this.difficulty = new DifficultySystem();
 
-    this.player = new Player(640, 360, this.stats);
-    this.app.stage.addChild(this.player.sprite);
+    // World container: all game entities live here so shaking is isolated from HUD
+    this.world = new Container();
+    this.app.stage.addChild(this.world);
 
-    this.xpSystem = new XpSystem(this.app.stage);
+    this.player = new Player(640, 360, this.stats);
+    this.world.addChild(this.player.sprite);
+
+    this.xpSystem = new XpSystem(this.world);
+    this.particles = new ParticleSystem(this.world);
+    this.screenShake = new ScreenShake(this.world);
 
     this.enemySystem = new EnemySystem(
-      this.app.stage,
+      this.world,
       this.player,
       this.difficulty,
-      (x, y, xp) => this.xpSystem.spawnOrb(x, y, xp),
+      (x, y, xp, isBoss) => {
+        this.xpSystem.spawnOrb(x, y, xp);
+        this.particles.burst(x, y, isBoss ? 0xf97316 : 0xef4444, isBoss ? 20 : 10);
+        if (isBoss) this.screenShake.trigger(10, 500);
+      },
+      () => this.screenShake.trigger(5, 300),
     );
 
     this.combatSystem = new CombatSystem(
-      this.app.stage,
+      this.world,
       this.player,
       this.stats,
       () => this.enemySystem.getEnemies(),
     );
 
+    // UI stays on stage — unaffected by world shake
     this.hud = new Hud(this.app.stage);
     this.levelUpScreen = new LevelUpScreen(this.app.stage);
     this.overlay = new StateOverlay(this.app.stage);

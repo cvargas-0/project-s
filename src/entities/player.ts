@@ -66,14 +66,16 @@ export class Player {
     }
   }
 
-  public takeDamage(damage: number): void {
-    if (this.isInvulnerable) return;
+  /** Returns true if damage was actually applied (not blocked by invulnerability) */
+  public takeDamage(damage: number): boolean {
+    if (this.isInvulnerable) return false;
 
     const actual = Math.max(1, damage - this.stats.armor);
     this.hp -= actual;
     this.isInvulnerable = true;
     this.invulnerableTimer = 0;
     this.sprite.tint = 0xff0000;
+    return true;
   }
 
   public heal(amount: number): void {

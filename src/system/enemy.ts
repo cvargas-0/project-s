@@ -10,18 +10,21 @@ export class EnemySystem {
   private container: Container;
   private player: Player;
   private difficulty: DifficultySystem;
-  private onEnemyDied?: (x: number, y: number, xp: number) => void;
+  private onEnemyDied?: (x: number, y: number, xp: number, isBoss: boolean) => void;
+  private onPlayerHit?: () => void;
 
   constructor(
     container: Container,
     player: Player,
     difficulty: DifficultySystem,
-    onEnemyDied?: (x: number, y: number, xp: number) => void,
+    onEnemyDied?: (x: number, y: number, xp: number, isBoss: boolean) => void,
+    onPlayerHit?: () => void,
   ) {
     this.container = container;
     this.player = player;
     this.difficulty = difficulty;
     this.onEnemyDied = onEnemyDied;
+    this.onPlayerHit = onPlayerHit;
   }
 
   public update(deltaMs: number): void {
@@ -38,7 +41,7 @@ export class EnemySystem {
 
     this.enemies = this.enemies.filter((enemy) => {
       if (!enemy.isAlive) {
-        this.onEnemyDied?.(enemy.sprite.x, enemy.sprite.y, enemy.xpValue);
+        this.onEnemyDied?.(enemy.sprite.x, enemy.sprite.y, enemy.xpValue, enemy.isBoss);
         enemy.sprite.destroy();
         return false;
       }
@@ -53,7 +56,8 @@ export class EnemySystem {
       const distance = Math.hypot(dx, dy);
 
       if (distance < enemy.collisionRadius) {
-        this.player.takeDamage(enemy.contactDamage);
+        const hit = this.player.takeDamage(enemy.contactDamage);
+        if (hit) this.onPlayerHit?.();
       }
     }
   }
