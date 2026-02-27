@@ -5,8 +5,8 @@ export interface PlayerStats {
   attackInterval: number; // ms
   projectileCount: number;
   projectileSpeed: number; // px/frame
-  armor: number;          // flat damage reduction per hit (min 1 always dealt)
-  regenRate: number;      // HP per second (0 = disabled)
+  armor: number; // flat damage reduction per hit (min 1 always dealt)
+  regenRate: number; // HP per second (0 = disabled)
 }
 
 export function createStats(): PlayerStats {

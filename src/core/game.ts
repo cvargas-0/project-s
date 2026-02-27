@@ -70,11 +70,18 @@ export class Game {
         this.triggerLevelUp();
       }
 
-      this.hud.update(this.player, this.xpSystem, this.difficulty.elapsedSeconds);
+      this.hud.update(
+        this.player,
+        this.xpSystem,
+        this.difficulty.elapsedSeconds,
+      );
 
       if (!this.player.isAlive()) {
         this.state = State.GAME_OVER;
-        this.overlay.showGameOver(this.difficulty.elapsedSeconds, this.xpSystem.level);
+        this.overlay.showGameOver(
+          this.difficulty.elapsedSeconds,
+          this.xpSystem.level,
+        );
       }
     });
   }
@@ -100,7 +107,12 @@ export class Game {
       this.difficulty,
       (x, y, xp, isBoss) => {
         this.xpSystem.spawnOrb(x, y, xp);
-        this.particles.burst(x, y, isBoss ? 0xf97316 : 0xef4444, isBoss ? 20 : 10);
+        this.particles.burst(
+          x,
+          y,
+          isBoss ? 0xf97316 : 0xef4444,
+          isBoss ? 20 : 10,
+        );
         if (isBoss) this.screenShake.trigger(10, 500);
       },
       () => this.screenShake.trigger(5, 300),

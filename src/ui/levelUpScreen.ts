@@ -18,7 +18,11 @@ export class LevelUpScreen {
     this.container = container;
   }
 
-  public show(level: number, upgrades: Upgrade[], onPick: (upgrade: Upgrade) => void): void {
+  public show(
+    level: number,
+    upgrades: Upgrade[],
+    onPick: (upgrade: Upgrade) => void,
+  ): void {
     this.hide();
     this.currentUpgrades = upgrades;
     this.onPick = onPick;
@@ -32,7 +36,12 @@ export class LevelUpScreen {
     // Title
     const title = new Text({
       text: `¡NIVEL ${level}!`,
-      style: new TextStyle({ fill: 0xfbbf24, fontSize: 40, fontFamily: "monospace", fontWeight: "bold" }),
+      style: new TextStyle({
+        fill: 0xfbbf24,
+        fontSize: 40,
+        fontFamily: "monospace",
+        fontWeight: "bold",
+      }),
     });
     title.anchor.set(0.5);
     title.x = W / 2;
@@ -42,7 +51,11 @@ export class LevelUpScreen {
 
     const sub = new Text({
       text: "Elige una mejora",
-      style: new TextStyle({ fill: 0xdde1e7, fontSize: 18, fontFamily: "monospace" }),
+      style: new TextStyle({
+        fill: 0xdde1e7,
+        fontSize: 18,
+        fontFamily: "monospace",
+      }),
     });
     sub.anchor.set(0.5);
     sub.x = W / 2;
@@ -63,7 +76,11 @@ export class LevelUpScreen {
     // Hint
     const hint = new Text({
       text: "Clic o tecla [1] [2] [3]",
-      style: new TextStyle({ fill: 0x475569, fontSize: 13, fontFamily: "monospace" }),
+      style: new TextStyle({
+        fill: 0x475569,
+        fontSize: 13,
+        fontFamily: "monospace",
+      }),
     });
     hint.anchor.set(0.5);
     hint.x = W / 2;
@@ -96,7 +113,11 @@ export class LevelUpScreen {
     // Number badge
     const badge = new Text({
       text: `[${num}]`,
-      style: new TextStyle({ fill: 0x7c3aed, fontSize: 12, fontFamily: "monospace" }),
+      style: new TextStyle({
+        fill: 0x7c3aed,
+        fontSize: 12,
+        fontFamily: "monospace",
+      }),
     });
     badge.x = x + 10;
     badge.y = y + 8;
@@ -106,7 +127,12 @@ export class LevelUpScreen {
     // Name
     const name = new Text({
       text: upgrade.name,
-      style: new TextStyle({ fill: 0xfbbf24, fontSize: 20, fontFamily: "monospace", fontWeight: "bold" }),
+      style: new TextStyle({
+        fill: 0xfbbf24,
+        fontSize: 20,
+        fontFamily: "monospace",
+        fontWeight: "bold",
+      }),
     });
     name.anchor.set(0.5, 0);
     name.x = x + CARD_W / 2;

@@ -6,8 +6,16 @@ import type { XpSystem } from "../system/xp";
 const BAR_W = 200;
 const BAR_H = 16;
 const PAD = 16;
-const STYLE = new TextStyle({ fill: 0xffffff, fontSize: 13, fontFamily: "monospace" });
-const TIMER_STYLE = new TextStyle({ fill: 0x94a3b8, fontSize: 18, fontFamily: "monospace" });
+const STYLE = new TextStyle({
+  fill: 0xffffff,
+  fontSize: 13,
+  fontFamily: "monospace",
+});
+const TIMER_STYLE = new TextStyle({
+  fill: 0x94a3b8,
+  fontSize: 18,
+  fontFamily: "monospace",
+});
 
 function fmtTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -41,8 +49,12 @@ export class Hud {
     this.timerText.y = PAD;
 
     for (const el of [
-      this.hpBg, this.hpFill, this.hpText,
-      this.xpBg, this.xpFill, this.xpText,
+      this.hpBg,
+      this.hpFill,
+      this.hpText,
+      this.xpBg,
+      this.xpFill,
+      this.xpText,
       this.timerText,
     ]) {
       container.addChild(el);
@@ -60,7 +72,9 @@ export class Hud {
     const hpRatio = Math.max(0, hp / maxHp);
     this.hpFill.clear();
     if (hpRatio > 0) {
-      this.hpFill.rect(PAD, hpY, BAR_W * hpRatio, BAR_H).fill({ color: 0xf43f5e });
+      this.hpFill
+        .rect(PAD, hpY, BAR_W * hpRatio, BAR_H)
+        .fill({ color: 0xf43f5e });
     }
     this.hpText.text = `${hp}/${maxHp} HP`;
     this.hpText.x = PAD + BAR_W + 8;
@@ -71,7 +85,9 @@ export class Hud {
     const xpRatio = xp.xpToNext > 0 ? Math.min(1, xp.xp / xp.xpToNext) : 0;
     this.xpFill.clear();
     if (xpRatio > 0) {
-      this.xpFill.rect(PAD, xpY, BAR_W * xpRatio, BAR_H).fill({ color: 0xa78bfa });
+      this.xpFill
+        .rect(PAD, xpY, BAR_W * xpRatio, BAR_H)
+        .fill({ color: 0xa78bfa });
     }
     this.xpText.text = `Lv ${xp.level}  ${xp.xp}/${xp.xpToNext} XP`;
     this.xpText.x = PAD + BAR_W + 8;
@@ -83,8 +99,12 @@ export class Hud {
 
   public destroy(): void {
     for (const el of [
-      this.hpBg, this.hpFill, this.hpText,
-      this.xpBg, this.xpFill, this.xpText,
+      this.hpBg,
+      this.hpFill,
+      this.hpText,
+      this.xpBg,
+      this.xpFill,
+      this.xpText,
       this.timerText,
     ]) {
       el.destroy();

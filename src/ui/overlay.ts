@@ -26,7 +26,14 @@ export class StateOverlay {
     this.add(bg);
 
     this.addText("PAUSED", 0xfbbf24, 56, W / 2, H / 2 - 40, true);
-    this.addText("[SPACE] Resume   [R] Restart", 0x94a3b8, 16, W / 2, H / 2 + 30, true);
+    this.addText(
+      "[SPACE] Resume   [R] Restart",
+      0x94a3b8,
+      16,
+      W / 2,
+      H / 2 + 30,
+      true,
+    );
   }
 
   public showGameOver(elapsedSeconds: number, level: number): void {
@@ -37,7 +44,14 @@ export class StateOverlay {
     this.add(bg);
 
     this.addText("GAME OVER", 0xf43f5e, 60, W / 2, H / 2 - 80, true);
-    this.addText(`Survived  ${fmt(elapsedSeconds)}   Level ${level}`, 0xdde1e7, 20, W / 2, H / 2, true);
+    this.addText(
+      `Survived  ${fmt(elapsedSeconds)}   Level ${level}`,
+      0xdde1e7,
+      20,
+      W / 2,
+      H / 2,
+      true,
+    );
     this.addText("[R] Play Again", 0x94a3b8, 16, W / 2, H / 2 + 50, true);
   }
 

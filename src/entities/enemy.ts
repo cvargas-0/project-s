@@ -17,7 +17,14 @@ export class Enemy {
   private readonly baseColor: number;
   private hitFlashTimer = 0;
 
-  constructor(x: number, y: number, hp = 3, speed = 1.5, xpValue = 20, isBoss = false) {
+  constructor(
+    x: number,
+    y: number,
+    hp = 3,
+    speed = 1.5,
+    xpValue = 20,
+    isBoss = false,
+  ) {
     this.hp = hp;
     this.speed = speed;
     this.xpValue = xpValue;

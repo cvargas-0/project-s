@@ -13,7 +13,14 @@ export class Projectile {
   private dy: number;
   private damage: number;
 
-  constructor(x: number, y: number, dx: number, dy: number, damage = 1, speed = 6) {
+  constructor(
+    x: number,
+    y: number,
+    dx: number,
+    dy: number,
+    damage = 1,
+    speed = 6,
+  ) {
     this.damage = damage;
     this.speed = speed;
 
