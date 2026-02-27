@@ -1,4 +1,4 @@
-# Proejct S (Temporal Name)
+# Project S (Temporal Name)
 
 A 2D roguelike survivor game built with **PixiJS v8** and **TypeScript**. Inspired by Vampire Survivors.
 
