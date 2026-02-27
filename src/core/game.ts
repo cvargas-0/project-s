@@ -4,12 +4,14 @@ import { createLoop } from "./loop";
 import { EnemySystem } from "../system/enemy";
 import { CombatSystem } from "../system/combat";
 import { XpSystem } from "../system/xp";
+import { DifficultySystem } from "../system/difficulty";
 import { State } from "./state";
 import { Input } from "./input";
 import { createStats, type PlayerStats } from "./playerStats";
 import { getRandomUpgrades } from "../data/upgrades";
 import { Hud } from "../ui/hud";
 import { LevelUpScreen } from "../ui/levelUpScreen";
+import { StateOverlay } from "../ui/overlay";
 
 export class Game {
   private app!: Application;
@@ -22,8 +24,10 @@ export class Game {
   private enemySystem!: EnemySystem;
   private combatSystem!: CombatSystem;
   private xpSystem!: XpSystem;
+  private difficulty!: DifficultySystem;
   private hud!: Hud;
   private levelUpScreen!: LevelUpScreen;
+  private overlay!: StateOverlay;
 
   public async start() {
     this.app = new Application();
@@ -46,6 +50,7 @@ export class Game {
 
       if (this.state !== State.RUNNING) return;
 
+      this.difficulty.update(deltaMs);
       this.player.update(delta);
       this.enemySystem.update(deltaMs);
       this.combatSystem.update(delta, deltaMs);
@@ -54,16 +59,18 @@ export class Game {
         this.triggerLevelUp();
       }
 
-      this.hud.update(this.player, this.xpSystem);
+      this.hud.update(this.player, this.xpSystem, this.difficulty.elapsedSeconds);
 
       if (!this.player.isAlive()) {
         this.state = State.GAME_OVER;
+        this.overlay.showGameOver(this.difficulty.elapsedSeconds, this.xpSystem.level);
       }
     });
   }
 
   private setup(): void {
     this.stats = createStats();
+    this.difficulty = new DifficultySystem();
 
     this.player = new Player(640, 360, this.stats);
     this.app.stage.addChild(this.player.sprite);
@@ -73,6 +80,7 @@ export class Game {
     this.enemySystem = new EnemySystem(
       this.app.stage,
       this.player,
+      this.difficulty,
       (x, y, xp) => this.xpSystem.spawnOrb(x, y, xp),
     );
 
@@ -85,13 +93,13 @@ export class Game {
 
     this.hud = new Hud(this.app.stage);
     this.levelUpScreen = new LevelUpScreen(this.app.stage);
+    this.overlay = new StateOverlay(this.app.stage);
   }
 
   private triggerLevelUp(): void {
     this.state = State.LEVEL_UP;
 
     const upgrades = getRandomUpgrades(3);
-
     this.levelUpScreen.show(this.xpSystem.level, upgrades, (chosen) => {
       chosen.apply(this.stats, (amount) => this.player.heal(amount));
       this.levelUpScreen.hide();
@@ -108,8 +116,13 @@ export class Game {
     }
 
     if (this.input.wasPressed("Space")) {
-      if (this.state === State.RUNNING) this.state = State.PAUSED;
-      else if (this.state === State.PAUSED) this.state = State.RUNNING;
+      if (this.state === State.RUNNING) {
+        this.state = State.PAUSED;
+        this.overlay.showPaused();
+      } else if (this.state === State.PAUSED) {
+        this.state = State.RUNNING;
+        this.overlay.hide();
+      }
     }
 
     if (this.input.wasPressed("KeyR")) {
@@ -118,6 +131,7 @@ export class Game {
   }
 
   private reset(): void {
+    this.overlay.hide();
     this.levelUpScreen.hide();
     this.hud.destroy();
     this.app.stage.removeChildren();

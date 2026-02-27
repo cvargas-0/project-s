@@ -4,27 +4,32 @@ import { Player } from "./player";
 export class Enemy {
   public sprite: Graphics;
   public isAlive: boolean = true;
-  public readonly xpValue = 20;
+  public readonly xpValue: number;
+  public readonly isBoss: boolean;
+  public readonly collisionRadius: number;
+  public readonly contactDamage: number;
 
-  private speed = 1.5;
-  private hp = 3;
+  private speed: number;
+  private hp: number;
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, hp = 3, speed = 1.5, xpValue = 20, isBoss = false) {
+    this.hp = hp;
+    this.speed = speed;
+    this.xpValue = xpValue;
+    this.isBoss = isBoss;
+
+    const radius = isBoss ? 32 : 16;
+    const color = isBoss ? 0xf97316 : 0xef4444; // orange for boss, red for normal
+    this.collisionRadius = radius + 12;
+    this.contactDamage = isBoss ? 2 : 1;
+
     this.sprite = new Graphics();
-    this.sprite.circle(0, 0, 16);
-    this.sprite.fill(0xef4444);
-
+    this.sprite.circle(0, 0, radius);
+    this.sprite.fill(color);
     this.sprite.x = x;
     this.sprite.y = y;
   }
 
-  /**
-   * Update enemy position towards the player
-   *
-   * @param delta
-   * @param player
-   * @returns void
-   */
   public update(delta: number, player: Player): void {
     if (!this.isAlive) return;
 
@@ -38,17 +43,10 @@ export class Enemy {
     this.sprite.y += (dy / length) * this.speed * delta;
   }
 
-  /**
-   * Take damage to the enemy
-   *
-   * @param damage
-   * @returns void
-   */
   public takeDamage(damage: number): void {
     this.hp -= damage;
     if (this.hp <= 0) {
       this.isAlive = false;
-      //   this.sprite.destroy();
     }
   }
 }

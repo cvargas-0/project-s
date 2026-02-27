@@ -7,6 +7,13 @@ const BAR_W = 200;
 const BAR_H = 16;
 const PAD = 16;
 const STYLE = new TextStyle({ fill: 0xffffff, fontSize: 13, fontFamily: "monospace" });
+const TIMER_STYLE = new TextStyle({ fill: 0x94a3b8, fontSize: 18, fontFamily: "monospace" });
+
+function fmtTime(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
 
 export class Hud {
   private hpBg: Graphics;
@@ -17,6 +24,8 @@ export class Hud {
   private xpFill: Graphics;
   private xpText: Text;
 
+  private timerText: Text;
+
   constructor(container: Container) {
     this.hpBg = new Graphics();
     this.hpFill = new Graphics();
@@ -26,12 +35,21 @@ export class Hud {
     this.xpFill = new Graphics();
     this.xpText = new Text({ text: "", style: STYLE });
 
-    for (const el of [this.hpBg, this.hpFill, this.hpText, this.xpBg, this.xpFill, this.xpText]) {
+    this.timerText = new Text({ text: "00:00", style: TIMER_STYLE });
+    this.timerText.anchor.set(1, 0); // right-align
+    this.timerText.x = 1280 - PAD;
+    this.timerText.y = PAD;
+
+    for (const el of [
+      this.hpBg, this.hpFill, this.hpText,
+      this.xpBg, this.xpFill, this.xpText,
+      this.timerText,
+    ]) {
       container.addChild(el);
     }
   }
 
-  public update(player: Player, xp: XpSystem): void {
+  public update(player: Player, xp: XpSystem, elapsedSeconds: number): void {
     const hp = player.getHp();
     const maxHp = player.getMaxHp();
     const hpY = PAD;
@@ -55,13 +73,20 @@ export class Hud {
     if (xpRatio > 0) {
       this.xpFill.rect(PAD, xpY, BAR_W * xpRatio, BAR_H).fill({ color: 0xa78bfa });
     }
-    this.xpText.text = `Nv ${xp.level}  ${xp.xp}/${xp.xpToNext} XP`;
+    this.xpText.text = `Lv ${xp.level}  ${xp.xp}/${xp.xpToNext} XP`;
     this.xpText.x = PAD + BAR_W + 8;
     this.xpText.y = xpY;
+
+    // Timer (top-right)
+    this.timerText.text = fmtTime(elapsedSeconds);
   }
 
   public destroy(): void {
-    for (const el of [this.hpBg, this.hpFill, this.hpText, this.xpBg, this.xpFill, this.xpText]) {
+    for (const el of [
+      this.hpBg, this.hpFill, this.hpText,
+      this.xpBg, this.xpFill, this.xpText,
+      this.timerText,
+    ]) {
       el.destroy();
     }
   }
