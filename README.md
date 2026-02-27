@@ -1,4 +1,4 @@
-# Nordic Survivor
+# Proejct S (Temporal Name)
 
 A 2D roguelike survivor game built with **PixiJS v8** and **TypeScript**. Inspired by Vampire Survivors.
 
@@ -213,12 +213,12 @@ The player starts at world center `(1500, 1500)` and is clamped to world bounds.
 
 `EventSystem` triggers temporary gameplay modifiers every 60–90 seconds:
 
-| Event       | Effect                   | Duration |
-| ----------- | ------------------------ | -------- |
-| Swarm!      | Spawn rate ×2            | 15s      |
-| Berserker!  | Damage ×2                | 10s      |
-| Frost       | Enemy speed ×0.5         | 12s      |
-| Blood Moon  | Enemy HP ×2 + XP ×2     | 20s      |
+| Event      | Effect              | Duration |
+| ---------- | ------------------- | -------- |
+| Swarm!     | Spawn rate ×2       | 15s      |
+| Berserker! | Damage ×2           | 10s      |
+| Frost      | Enemy speed ×0.5    | 12s      |
+| Blood Moon | Enemy HP ×2 + XP ×2 | 20s      |
 
 Multiplier fields are read by `DifficultySystem` and `CombatSystem`. Events display a colored banner with fade animation via `Hud.showBanner()`.
 
@@ -226,11 +226,11 @@ Multiplier fields are read by `DifficultySystem` and `CombatSystem`. Events disp
 
 `WaveSystem` triggers coordinated spawn patterns (first at ~2 min, then every 90–120s):
 
-| Wave          | Pattern                                        |
-| ------------- | ---------------------------------------------- |
-| Encirclement  | 8–12 enemies in a ring around the player       |
-| Rush          | 10–15 enemies from one random side             |
-| Elite Squad   | 3–5 enemies with 3× HP and 0.8× speed         |
+| Wave         | Pattern                                  |
+| ------------ | ---------------------------------------- |
+| Encirclement | 8–12 enemies in a ring around the player |
+| Rush         | 10–15 enemies from one random side       |
+| Elite Squad  | 3–5 enemies with 3× HP and 0.8× speed    |
 
 While a wave is active (`isSuppressing = true`), normal trickle spawning is paused. Waves use `EnemySystem.spawnEnemyAt()` to place enemies at specific coordinates.
 
@@ -250,12 +250,12 @@ All stats are displayed on the Game Over overlay. Stats reset with the rest of t
 
 Upgrades have 4 rarity tiers, each with a weighted probability:
 
-| Rarity    | Color  | Weight | Example upgrades                     |
-| --------- | ------ | ------ | ------------------------------------ |
-| Common    | Grey   | 50     | Swift Feet, Sharp Edge, Magnetism    |
-| Rare      | Blue   | 30     | Multishot, Thick Skin, Adrenaline    |
-| Epic      | Purple | 15     | Glass Cannon, Barrage, Fortress      |
-| Legendary | Gold   | 5      | Magnetize (collect all orbs)         |
+| Rarity    | Color  | Weight | Example upgrades                  |
+| --------- | ------ | ------ | --------------------------------- |
+| Common    | Grey   | 50     | Swift Feet, Sharp Edge, Magnetism |
+| Rare      | Blue   | 30     | Multishot, Thick Skin, Adrenaline |
+| Epic      | Purple | 15     | Glass Cannon, Barrage, Fortress   |
+| Legendary | Gold   | 5      | Magnetize (collect all orbs)      |
 
 Trade-off upgrades give a powerful boost but reduce another stat (e.g. Glass Cannon: +4 damage, -4 max HP). The level-up screen shows rarity-colored borders and labels on each card.
 
@@ -282,16 +282,16 @@ All values scale with a combined **tier** that factors in both elapsed time and 
 tier = elapsedSeconds / 20 + (playerLevel - 1) × 0.5
 ```
 
-| Stat           | Formula                                          |
-| -------------- | ------------------------------------------------ |
+| Stat           | Formula                                               |
+| -------------- | ----------------------------------------------------- |
 | Spawn interval | `max(150, 1000 - tier × 60)` ms ÷ spawnRateMultiplier |
-| Enemy HP       | `(3 + floor(tier × 0.8))` × enemyHpMultiplier   |
-| Enemy speed    | `min(4.0, 1.5 + tier × 0.12)` × enemySpeedMultiplier |
-| Enemy XP       | `floor(20 × (1 + tier × 0.15))` × xpMultiplier  |
-| Enemy orbs     | `1 + floor(tier / 4)`                            |
-| Boss HP        | `(25 + bossCount × 10) × (1 + tier × 0.1)`      |
-| Boss XP        | `enemyXp × 8`                                   |
-| Boss orbs      | `enemyOrbCount × 3`                             |
-| Boss spawns    | At 2:00, then every 90s (3:30, 5:00, 6:30...)   |
+| Enemy HP       | `(3 + floor(tier × 0.8))` × enemyHpMultiplier         |
+| Enemy speed    | `min(4.0, 1.5 + tier × 0.12)` × enemySpeedMultiplier  |
+| Enemy XP       | `floor(20 × (1 + tier × 0.15))` × xpMultiplier        |
+| Enemy orbs     | `1 + floor(tier / 4)`                                 |
+| Boss HP        | `(25 + bossCount × 10) × (1 + tier × 0.1)`            |
+| Boss XP        | `enemyXp × 8`                                         |
+| Boss orbs      | `enemyOrbCount × 3`                                   |
+| Boss spawns    | At 2:00, then every 90s (3:30, 5:00, 6:30...)         |
 
 XP required per level: `level × 100`
