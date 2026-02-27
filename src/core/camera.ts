@@ -1,4 +1,5 @@
 import type { Container } from "pixi.js";
+import { CAMERA } from '../constants';
 
 export class Camera {
   public x = 0;
@@ -9,9 +10,9 @@ export class Camera {
   constructor(
     private worldWidth: number,
     private worldHeight: number,
-    viewportWidth = 1280,
-    viewportHeight = 720,
-    private lerp = 0.08,
+    viewportWidth = CAMERA.DEFAULT_VIEWPORT_WIDTH,
+    viewportHeight = CAMERA.DEFAULT_VIEWPORT_HEIGHT,
+    private lerp = CAMERA.LERP,
   ) {
     this.viewportWidth = viewportWidth;
     this.viewportHeight = viewportHeight;

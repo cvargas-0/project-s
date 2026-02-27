@@ -1,4 +1,11 @@
 import type { DifficultySystem } from "./difficulty";
+import {
+  COLORS,
+  WAVE_TIMING,
+  WAVE_ENCIRCLEMENT,
+  WAVE_RUSH,
+  WAVE_ELITE,
+} from '../constants';
 
 type SpawnFn = (
   x: number,
@@ -23,14 +30,14 @@ interface WaveDefinition {
 
 const WAVES: WaveDefinition[] = [
   {
-    name: "Encirclement!",
-    color: 0xfbbf24,
-    suppressMs: 4000,
+    name: WAVE_ENCIRCLEMENT.NAME,
+    color: COLORS.WAVE_ENCIRCLEMENT,
+    suppressMs: WAVE_ENCIRCLEMENT.SUPPRESS_DURATION,
     spawn(fn, px, py, diff) {
-      const count = 8 + Math.floor(Math.random() * 5);
+      const count = WAVE_ENCIRCLEMENT.ENEMY_COUNT_BASE + Math.floor(Math.random() * (WAVE_ENCIRCLEMENT.ENEMY_COUNT_RANGE + 1));
       for (let i = 0; i < count; i++) {
         const angle = (Math.PI * 2 * i) / count;
-        const r = 280 + Math.random() * 40;
+        const r = WAVE_ENCIRCLEMENT.SPAWN_RADIUS + Math.random() * WAVE_ENCIRCLEMENT.SPAWN_RADIUS_VARIANCE;
         fn(
           px + Math.cos(angle) * r,
           py + Math.sin(angle) * r,
@@ -43,41 +50,41 @@ const WAVES: WaveDefinition[] = [
     },
   },
   {
-    name: "Rush!",
-    color: 0xf97316,
-    suppressMs: 3000,
+    name: WAVE_RUSH.NAME,
+    color: COLORS.WAVE_RUSH,
+    suppressMs: WAVE_RUSH.SUPPRESS_DURATION,
     spawn(fn, px, py, diff) {
       const side = Math.floor(Math.random() * 4);
-      const count = 10 + Math.floor(Math.random() * 6);
+      const count = WAVE_RUSH.ENEMY_COUNT_BASE + Math.floor(Math.random() * (WAVE_RUSH.ENEMY_COUNT_RANGE + 1));
       for (let i = 0; i < count; i++) {
         let x: number;
         let y: number;
-        const offset = (i - count / 2) * 40;
+        const offset = (i - count / 2) * WAVE_RUSH.ENEMY_SPACING;
         switch (side) {
-          case 0: x = px + offset; y = py - 350; break;
-          case 1: x = px + offset; y = py + 350; break;
-          case 2: x = px - 350; y = py + offset; break;
-          default: x = px + 350; y = py + offset; break;
+          case 0: x = px + offset; y = py - WAVE_RUSH.SPAWN_DISTANCE; break;
+          case 1: x = px + offset; y = py + WAVE_RUSH.SPAWN_DISTANCE; break;
+          case 2: x = px - WAVE_RUSH.SPAWN_DISTANCE; y = py + offset; break;
+          default: x = px + WAVE_RUSH.SPAWN_DISTANCE; y = py + offset; break;
         }
-        fn(x, y, diff.enemyHp, diff.enemySpeed * 1.3, diff.enemyXp, false);
+        fn(x, y, diff.enemyHp, diff.enemySpeed * WAVE_RUSH.SPEED_MULTIPLIER, diff.enemyXp, false);
       }
     },
   },
   {
-    name: "Elite Squad!",
-    color: 0xa78bfa,
-    suppressMs: 5000,
+    name: WAVE_ELITE.NAME,
+    color: COLORS.WAVE_ELITE,
+    suppressMs: WAVE_ELITE.SUPPRESS_DURATION,
     spawn(fn, px, py, diff) {
-      const count = 3 + Math.floor(Math.random() * 3);
+      const count = WAVE_ELITE.ENEMY_COUNT_BASE + Math.floor(Math.random() * (WAVE_ELITE.ENEMY_COUNT_RANGE + 1));
       for (let i = 0; i < count; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const r = 250 + Math.random() * 100;
+        const r = WAVE_ELITE.SPAWN_RADIUS + Math.random() * WAVE_ELITE.SPAWN_RADIUS_VARIANCE;
         fn(
           px + Math.cos(angle) * r,
           py + Math.sin(angle) * r,
-          diff.enemyHp * 3,
-          diff.enemySpeed * 0.8,
-          diff.enemyXp * 2,
+          diff.enemyHp * WAVE_ELITE.HP_MULTIPLIER,
+          diff.enemySpeed * WAVE_ELITE.SPEED_MULTIPLIER,
+          diff.enemyXp * WAVE_ELITE.XP_MULTIPLIER,
           false,
         );
       }
@@ -91,7 +98,7 @@ export class WaveSystem {
   private lastIndex = -1;
 
   constructor() {
-    this.cooldown = 120_000 + Math.random() * 30_000;
+    this.cooldown = WAVE_TIMING.FIRST_DELAY_BASE + Math.random() * WAVE_TIMING.FIRST_DELAY_VARIANCE;
   }
 
   get isSuppressing(): boolean {
@@ -132,12 +139,12 @@ export class WaveSystem {
     const wave = WAVES[idx];
     wave.spawn(spawnFn, px, py, diff);
     this.suppressTimer = wave.suppressMs;
-    this.cooldown = 90_000 + Math.random() * 30_000;
+    this.cooldown = WAVE_TIMING.COOLDOWN_BASE + Math.random() * WAVE_TIMING.COOLDOWN_VARIANCE;
     return wave.name;
   }
 
   public reset(): void {
-    this.cooldown = 120_000 + Math.random() * 30_000;
+    this.cooldown = WAVE_TIMING.FIRST_DELAY_BASE + Math.random() * WAVE_TIMING.FIRST_DELAY_VARIANCE;
     this.suppressTimer = 0;
     this.lastIndex = -1;
   }

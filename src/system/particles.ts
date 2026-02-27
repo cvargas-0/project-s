@@ -1,5 +1,6 @@
 import { Graphics } from "pixi.js";
 import type { Container } from "pixi.js";
+import { PARTICLES } from '../constants';
 
 interface Particle {
   sprite: Graphics;
@@ -17,15 +18,15 @@ export class ParticleSystem {
   /** Spawn a radial burst of particles at (x, y) */
   burst(x: number, y: number, color: number, count: number): void {
     for (let i = 0; i < count; i++) {
-      const angle = (Math.PI * 2 * i) / count + Math.random() * 0.8;
-      const speed = 1.5 + Math.random() * 3.5;
-      const size = 2 + Math.random() * 3;
-      const life = 280 + Math.random() * 220;
+      const angle = (Math.PI * 2 * i) / count + Math.random() * PARTICLES.ANGLE_VARIANCE;
+      const speed = PARTICLES.SPEED_MIN + Math.random() * PARTICLES.SPEED_RANGE;
+      const size = PARTICLES.SIZE_MIN + Math.random() * PARTICLES.SIZE_RANGE;
+      const life = PARTICLES.LIFETIME_MIN + Math.random() * PARTICLES.LIFETIME_RANGE;
 
       const sprite = new Graphics();
       sprite.circle(0, 0, size).fill(color);
-      sprite.x = x + (Math.random() - 0.5) * 12;
-      sprite.y = y + (Math.random() - 0.5) * 12;
+      sprite.x = x + (Math.random() - 0.5) * PARTICLES.POSITION_VARIANCE;
+      sprite.y = y + (Math.random() - 0.5) * PARTICLES.POSITION_VARIANCE;
       this.container.addChild(sprite);
 
       this.particles.push({
@@ -50,8 +51,8 @@ export class ParticleSystem {
 
       p.sprite.x += p.vx * delta;
       p.sprite.y += p.vy * delta;
-      p.vx *= 0.92; // friction
-      p.vy *= 0.92;
+      p.vx *= PARTICLES.FRICTION;
+      p.vy *= PARTICLES.FRICTION;
       p.sprite.alpha = p.life / p.maxLife; // fade out
       return true;
     });

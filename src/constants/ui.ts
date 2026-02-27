@@ -1,0 +1,36 @@
+export const HUD = {
+  BAR_WIDTH: 200,
+  BAR_HEIGHT: 16,
+  PADDING: 16,
+  FONT_FAMILY: 'monospace',
+  FONT_SIZE: 13,
+  TIMER_FONT_SIZE: 18,
+  BANNER_FADE_THRESHOLD: 0.7,   // fade out after 70% of duration
+} as const;
+
+export const LEVEL_UP_SCREEN = {
+  CARD_WIDTH: 240,
+  CARD_HEIGHT: 170,
+  CARD_GAP: 32,
+  CARD_BORDER_WIDTH: 2,
+  CARD_CORNER_RADIUS: 12,
+  BACKDROP_ALPHA: 0.75,
+  TITLE_FONT_SIZE: 40,
+  TITLE_Y: 190,
+  SUBTITLE_FONT_SIZE: 18,
+  SUBTITLE_Y: 245,
+  CARD_Y: 300,
+  HINT_FONT_SIZE: 13,
+  HINT_OFFSET_Y: 30,            // below card bottom
+} as const;
+
+export const OVERLAY = {
+  PAUSE_ALPHA: 0.5,
+  GAME_OVER_ALPHA: 0.7,
+  PAUSE_FONT_SIZE: 56,
+  GAME_OVER_FONT_SIZE: 60,
+  STATS_FONT_SIZE: 20,
+  DETAILS_FONT_SIZE: 16,
+  UPGRADE_LIST_FONT_SIZE: 14,
+  HINT_FONT_SIZE: 16,
+} as const;

@@ -1,4 +1,5 @@
 import type { Enemy } from "../entities/enemy";
+import { SPATIAL_GRID } from '../constants';
 
 /**
  * Uniform-grid spatial hash for fast enemy lookups.
@@ -13,7 +14,7 @@ import type { Enemy } from "../entities/enemy";
 export class SpatialGrid {
   private cells = new Map<number, Enemy[]>();
 
-  constructor(private readonly cellSize = 64) {}
+  constructor(private readonly cellSize = SPATIAL_GRID.CELL_SIZE) {}
 
   clear(): void {
     this.cells.clear();
@@ -35,16 +36,14 @@ export class SpatialGrid {
 
   /**
    * Return all enemies whose cell overlaps the 3×3 neighbourhood of (x, y).
-   * With cellSize=64 and a collision threshold of 20px this is always correct:
-   * any enemy within 20px must be in an adjacent or same cell.
    */
   query(x: number, y: number): Enemy[] {
     const cx = Math.floor(x / this.cellSize);
     const cy = Math.floor(y / this.cellSize);
     const result: Enemy[] = [];
 
-    for (let dx = -1; dx <= 1; dx++) {
-      for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -SPATIAL_GRID.QUERY_RADIUS; dx <= SPATIAL_GRID.QUERY_RADIUS; dx++) {
+      for (let dy = -SPATIAL_GRID.QUERY_RADIUS; dy <= SPATIAL_GRID.QUERY_RADIUS; dy++) {
         const cell = this.cells.get(this.cellKey(cx + dx, cy + dy));
         if (cell) result.push(...cell);
       }
@@ -52,8 +51,8 @@ export class SpatialGrid {
     return result;
   }
 
-  /** Pack (cx, cy) into a single integer key. Safe for |cx|, |cy| < 10 000. */
+  /** Pack (cx, cy) into a single integer key. */
   private cellKey(cx: number, cy: number): number {
-    return cx * 10_000 + cy;
+    return cx * SPATIAL_GRID.KEY_MULTIPLIER + cy;
   }
 }

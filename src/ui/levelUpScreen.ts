@@ -1,10 +1,11 @@
 import { Graphics, Text, TextStyle } from "pixi.js";
 import type { Container } from "pixi.js";
 import { RARITY_COLORS, type Upgrade } from "../data/upgrades";
+import { COLORS, LEVEL_UP_SCREEN, HUD } from '../constants';
 
-const CARD_W = 240;
-const CARD_H = 170;
-const GAP = 32;
+const CARD_W = LEVEL_UP_SCREEN.CARD_WIDTH;
+const CARD_H = LEVEL_UP_SCREEN.CARD_HEIGHT;
+const GAP = LEVEL_UP_SCREEN.CARD_GAP;
 
 const RARITY_LABELS: Record<string, string> = {
   common: "Common",
@@ -35,8 +36,8 @@ export class LevelUpScreen {
     // Backdrop
     const bg = new Graphics();
     bg.rect(0, 0, window.innerWidth, window.innerHeight).fill({
-      color: 0x000000,
-      alpha: 0.75,
+      color: COLORS.BACKDROP,
+      alpha: LEVEL_UP_SCREEN.BACKDROP_ALPHA,
     });
     this.container.addChild(bg);
     this.elements.push(bg);
@@ -45,36 +46,36 @@ export class LevelUpScreen {
     const title = new Text({
       text: `LEVEL ${level}!`,
       style: new TextStyle({
-        fill: 0xfbbf24,
-        fontSize: 40,
-        fontFamily: "monospace",
+        fill: COLORS.TITLE_GOLD,
+        fontSize: LEVEL_UP_SCREEN.TITLE_FONT_SIZE,
+        fontFamily: HUD.FONT_FAMILY,
         fontWeight: "bold",
       }),
     });
     title.anchor.set(0.5);
     title.x = window.innerWidth / 2;
-    title.y = 190;
+    title.y = LEVEL_UP_SCREEN.TITLE_Y;
     this.container.addChild(title);
     this.elements.push(title);
 
     const sub = new Text({
       text: "Choose an upgrade",
       style: new TextStyle({
-        fill: 0xdde1e7,
-        fontSize: 18,
-        fontFamily: "monospace",
+        fill: COLORS.TEXT_LIGHT,
+        fontSize: LEVEL_UP_SCREEN.SUBTITLE_FONT_SIZE,
+        fontFamily: HUD.FONT_FAMILY,
       }),
     });
     sub.anchor.set(0.5);
     sub.x = window.innerWidth / 2;
-    sub.y = 245;
+    sub.y = LEVEL_UP_SCREEN.SUBTITLE_Y;
     this.container.addChild(sub);
     this.elements.push(sub);
 
     // Cards
     const totalW = CARD_W * upgrades.length + GAP * (upgrades.length - 1);
     const startX = (window.innerWidth - totalW) / 2;
-    const cardY = 300;
+    const cardY = LEVEL_UP_SCREEN.CARD_Y;
 
     upgrades.forEach((upgrade, i) => {
       const x = startX + i * (CARD_W + GAP);
@@ -85,14 +86,14 @@ export class LevelUpScreen {
     const hint = new Text({
       text: "Click or press [1] [2] [3]",
       style: new TextStyle({
-        fill: 0x475569,
-        fontSize: 13,
-        fontFamily: "monospace",
+        fill: COLORS.TEXT_SUBTLE,
+        fontSize: LEVEL_UP_SCREEN.HINT_FONT_SIZE,
+        fontFamily: HUD.FONT_FAMILY,
       }),
     });
     hint.anchor.set(0.5);
     hint.x = window.innerWidth / 2;
-    hint.y = cardY + CARD_H + 30;
+    hint.y = cardY + CARD_H + LEVEL_UP_SCREEN.HINT_OFFSET_Y;
     this.container.addChild(hint);
     this.elements.push(hint);
   }
@@ -103,11 +104,11 @@ export class LevelUpScreen {
     const drawCard = (hover: boolean) => {
       card.clear();
       card
-        .roundRect(x, y, CARD_W, CARD_H, 12)
-        .fill({ color: hover ? 0x2d3f5e : 0x1e293b });
+        .roundRect(x, y, CARD_W, CARD_H, LEVEL_UP_SCREEN.CARD_CORNER_RADIUS)
+        .fill({ color: hover ? COLORS.CARD_BG_HOVER : COLORS.CARD_BG });
       card
-        .roundRect(x, y, CARD_W, CARD_H, 12)
-        .stroke({ color: hover ? 0xffffff : rarityColor, width: 2 });
+        .roundRect(x, y, CARD_W, CARD_H, LEVEL_UP_SCREEN.CARD_CORNER_RADIUS)
+        .stroke({ color: hover ? COLORS.CARD_BORDER_HOVER : rarityColor, width: LEVEL_UP_SCREEN.CARD_BORDER_WIDTH });
     };
 
     drawCard(false);
@@ -125,7 +126,7 @@ export class LevelUpScreen {
       style: new TextStyle({
         fill: rarityColor,
         fontSize: 12,
-        fontFamily: "monospace",
+        fontFamily: HUD.FONT_FAMILY,
       }),
     });
     badge.x = x + 10;
@@ -139,7 +140,7 @@ export class LevelUpScreen {
       style: new TextStyle({
         fill: rarityColor,
         fontSize: 11,
-        fontFamily: "monospace",
+        fontFamily: HUD.FONT_FAMILY,
         fontWeight: "bold",
       }),
     });
@@ -155,7 +156,7 @@ export class LevelUpScreen {
       style: new TextStyle({
         fill: rarityColor,
         fontSize: 20,
-        fontFamily: "monospace",
+        fontFamily: HUD.FONT_FAMILY,
         fontWeight: "bold",
       }),
     });
@@ -169,9 +170,9 @@ export class LevelUpScreen {
     const desc = new Text({
       text: upgrade.description,
       style: new TextStyle({
-        fill: 0xdde1e7,
+        fill: COLORS.TEXT_LIGHT,
         fontSize: 13,
-        fontFamily: "monospace",
+        fontFamily: HUD.FONT_FAMILY,
         wordWrap: true,
         wordWrapWidth: CARD_W - 24,
       }),

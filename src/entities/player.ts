@@ -1,6 +1,7 @@
 import { Graphics } from "pixi.js";
 import { Input } from "../core/input";
 import type { PlayerStats } from "../core/playerStats";
+import { PLAYER, COLORS } from '../constants';
 
 export class Player {
   public sprite: Graphics;
@@ -9,13 +10,11 @@ export class Player {
   private hp: number;
 
   private isInvulnerable = false;
-  private invulnerableDuration = 500; // ms
   private invulnerableTimer = 0;
 
   private regenAccum = 0; // accumulated HP from regen
   private worldWidth: number;
   private worldHeight: number;
-  private readonly RADIUS = 20;
 
   constructor(
     x: number,
@@ -29,8 +28,8 @@ export class Player {
     this.hp = stats.maxHp;
 
     this.sprite = new Graphics();
-    this.sprite.circle(0, 0, this.RADIUS);
-    this.sprite.fill(0x38bdf8);
+    this.sprite.circle(0, 0, PLAYER.RADIUS);
+    this.sprite.fill(COLORS.PLAYER);
     this.sprite.x = x;
     this.sprite.y = y;
   }
@@ -55,15 +54,15 @@ export class Player {
     this.sprite.y += dy * this.stats.speed * delta;
 
     // Clamp to world bounds
-    this.sprite.x = Math.max(this.RADIUS, Math.min(this.worldWidth - this.RADIUS, this.sprite.x));
-    this.sprite.y = Math.max(this.RADIUS, Math.min(this.worldHeight - this.RADIUS, this.sprite.y));
+    this.sprite.x = Math.max(PLAYER.RADIUS, Math.min(this.worldWidth - PLAYER.RADIUS, this.sprite.x));
+    this.sprite.y = Math.max(PLAYER.RADIUS, Math.min(this.worldHeight - PLAYER.RADIUS, this.sprite.y));
 
     // Invulnerability timer
     if (this.isInvulnerable) {
       this.invulnerableTimer += deltaMs;
-      if (this.invulnerableTimer >= this.invulnerableDuration) {
+      if (this.invulnerableTimer >= PLAYER.INVULNERABILITY_DURATION) {
         this.isInvulnerable = false;
-        this.sprite.tint = 0xffffff;
+        this.sprite.tint = COLORS.NEUTRAL_TINT;
       }
     }
 
@@ -81,11 +80,11 @@ export class Player {
   public takeDamage(damage: number): number {
     if (this.isInvulnerable) return 0;
 
-    const actual = Math.max(1, damage - this.stats.armor);
+    const actual = Math.max(PLAYER.MIN_DAMAGE_TAKEN, damage - this.stats.armor);
     this.hp -= actual;
     this.isInvulnerable = true;
     this.invulnerableTimer = 0;
-    this.sprite.tint = 0xff0000;
+    this.sprite.tint = COLORS.DAMAGE_TINT;
     return actual;
   }
 

@@ -2,19 +2,20 @@ import { Graphics, Text, TextStyle } from "pixi.js";
 import type { Container } from "pixi.js";
 import type { Player } from "../entities/player";
 import type { XpSystem } from "../system/xp";
+import { COLORS, HUD } from '../constants';
 
-const BAR_W = 200;
-const BAR_H = 16;
-const PAD = 16;
+const BAR_W = HUD.BAR_WIDTH;
+const BAR_H = HUD.BAR_HEIGHT;
+const PAD = HUD.PADDING;
 const STYLE = new TextStyle({
-  fill: 0xffffff,
-  fontSize: 13,
-  fontFamily: "monospace",
+  fill: COLORS.TEXT_PRIMARY,
+  fontSize: HUD.FONT_SIZE,
+  fontFamily: HUD.FONT_FAMILY,
 });
 const TIMER_STYLE = new TextStyle({
-  fill: 0x94a3b8,
-  fontSize: 18,
-  fontFamily: "monospace",
+  fill: COLORS.TEXT_SECONDARY,
+  fontSize: HUD.TIMER_FONT_SIZE,
+  fontFamily: HUD.FONT_FAMILY,
 });
 
 function fmtTime(seconds: number): string {
@@ -75,26 +76,26 @@ export class Hud {
     this.timerText.x = screenW - PAD;
 
     // HP bar
-    this.hpBg.clear().rect(PAD, hpY, BAR_W, BAR_H).fill({ color: 0x1e293b });
+    this.hpBg.clear().rect(PAD, hpY, BAR_W, BAR_H).fill({ color: COLORS.UI_BG });
     const hpRatio = Math.max(0, hp / maxHp);
     this.hpFill.clear();
     if (hpRatio > 0) {
       this.hpFill
         .rect(PAD, hpY, BAR_W * hpRatio, BAR_H)
-        .fill({ color: 0xf43f5e });
+        .fill({ color: COLORS.HP_BAR });
     }
     this.hpText.text = `${hp}/${maxHp} HP`;
     this.hpText.x = PAD + BAR_W + 8;
     this.hpText.y = hpY;
 
     // XP bar
-    this.xpBg.clear().rect(PAD, xpY, BAR_W, BAR_H).fill({ color: 0x1e293b });
+    this.xpBg.clear().rect(PAD, xpY, BAR_W, BAR_H).fill({ color: COLORS.UI_BG });
     const xpRatio = xp.xpToNext > 0 ? Math.min(1, xp.xp / xp.xpToNext) : 0;
     this.xpFill.clear();
     if (xpRatio > 0) {
       this.xpFill
         .rect(PAD, xpY, BAR_W * xpRatio, BAR_H)
-        .fill({ color: 0xa78bfa });
+        .fill({ color: COLORS.XP_BAR });
     }
     this.xpText.text = `Lv ${xp.level}  ${xp.xp}/${xp.xpToNext} XP`;
     this.xpText.x = PAD + BAR_W + 8;
@@ -110,8 +111,10 @@ export class Hud {
       if (progress >= 1) {
         this.hideBanner();
       } else {
-        // Full opacity first 70%, then fade out
-        this.banner.alpha = progress < 0.7 ? 1 : 1 - (progress - 0.7) / 0.3;
+        // Full opacity first, then fade out
+        this.banner.alpha = progress < HUD.BANNER_FADE_THRESHOLD
+          ? 1
+          : 1 - (progress - HUD.BANNER_FADE_THRESHOLD) / (1 - HUD.BANNER_FADE_THRESHOLD);
       }
     }
   }
@@ -123,9 +126,9 @@ export class Hud {
       style: new TextStyle({
         fill: color,
         fontSize: 32,
-        fontFamily: "monospace",
+        fontFamily: HUD.FONT_FAMILY,
         fontWeight: "bold",
-        stroke: { color: 0x000000, width: 4 },
+        stroke: { color: COLORS.BACKDROP, width: 4 },
       }),
     });
     this.banner.anchor.set(0.5);

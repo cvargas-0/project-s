@@ -2,11 +2,12 @@ import type { Container } from "pixi.js";
 import { XpOrb } from "../entities/xpOrb";
 import type { Player } from "../entities/player";
 import type { PlayerStats } from "../core/playerStats";
+import { LEVELING } from '../constants';
 
 export class XpSystem {
   public level = 1;
   public xp = 0;
-  public xpToNext = 100;
+  public xpToNext: number = LEVELING.INITIAL_XP_TO_NEXT;
 
   private orbs: XpOrb[] = [];
   private readonly container: Container;
@@ -45,7 +46,7 @@ export class XpSystem {
         if (this.xp >= this.xpToNext) {
           this.xp -= this.xpToNext;
           this.level += 1;
-          this.xpToNext = this.level * 100;
+          this.xpToNext = this.level * LEVELING.XP_PER_LEVEL_MULTIPLIER;
           leveledUp = true;
         }
       }
@@ -70,6 +71,6 @@ export class XpSystem {
     this.orbs = [];
     this.level = 1;
     this.xp = 0;
-    this.xpToNext = 100;
+    this.xpToNext = LEVELING.INITIAL_XP_TO_NEXT;
   }
 }

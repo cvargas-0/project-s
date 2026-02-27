@@ -1,6 +1,7 @@
 import { Graphics, Text, TextStyle } from "pixi.js";
 import type { Container } from "pixi.js";
 import type { RunStats } from "../core/runStats";
+import { COLORS, OVERLAY, HUD } from '../constants';
 
 function screenW(): number { return window.innerWidth; }
 function screenH(): number { return window.innerHeight; }
@@ -23,14 +24,14 @@ export class StateOverlay {
     this.hide();
 
     const bg = new Graphics();
-    bg.rect(0, 0, screenW(), screenH()).fill({ color: 0x000000, alpha: 0.5 });
+    bg.rect(0, 0, screenW(), screenH()).fill({ color: COLORS.BACKDROP, alpha: OVERLAY.PAUSE_ALPHA });
     this.add(bg);
 
-    this.addText("PAUSED", 0xfbbf24, 56, screenW() / 2, screenH() / 2 - 40, true);
+    this.addText("PAUSED", COLORS.TITLE_GOLD, OVERLAY.PAUSE_FONT_SIZE, screenW() / 2, screenH() / 2 - 40, true);
     this.addText(
       "[SPACE] Resume   [R] Restart",
-      0x94a3b8,
-      16,
+      COLORS.TEXT_SECONDARY,
+      OVERLAY.HINT_FONT_SIZE,
       screenW() / 2,
       screenH() / 2 + 30,
       true,
@@ -41,19 +42,19 @@ export class StateOverlay {
     this.hide();
 
     const bg = new Graphics();
-    bg.rect(0, 0, screenW(), screenH()).fill({ color: 0x000000, alpha: 0.7 });
+    bg.rect(0, 0, screenW(), screenH()).fill({ color: COLORS.BACKDROP, alpha: OVERLAY.GAME_OVER_ALPHA });
     this.add(bg);
 
     const cx = screenW() / 2;
     let y = screenH() / 2 - 140;
 
-    this.addText("GAME OVER", 0xf43f5e, 60, cx, y, true);
+    this.addText("GAME OVER", COLORS.GAME_OVER_RED, OVERLAY.GAME_OVER_FONT_SIZE, cx, y, true);
     y += 70;
 
     this.addText(
       `Survived  ${fmt(elapsedSeconds)}   Level ${level}`,
-      0xdde1e7,
-      20,
+      COLORS.TEXT_LIGHT,
+      OVERLAY.STATS_FONT_SIZE,
       cx,
       y,
       true,
@@ -67,7 +68,7 @@ export class StateOverlay {
     ];
 
     for (const line of lines) {
-      this.addText(line, 0x94a3b8, 16, cx, y, true);
+      this.addText(line, COLORS.TEXT_SECONDARY, OVERLAY.DETAILS_FONT_SIZE, cx, y, true);
       y += 26;
     }
 
@@ -75,8 +76,8 @@ export class StateOverlay {
       y += 6;
       this.addText(
         `Upgrades: ${stats.upgradesChosen.join(", ")}`,
-        0xa78bfa,
-        14,
+        COLORS.XP_BAR,
+        OVERLAY.UPGRADE_LIST_FONT_SIZE,
         cx,
         y,
         true,
@@ -86,7 +87,7 @@ export class StateOverlay {
       y += 10;
     }
 
-    this.addText("[R] Play Again", 0x94a3b8, 16, cx, y, true);
+    this.addText("[R] Play Again", COLORS.TEXT_SECONDARY, OVERLAY.HINT_FONT_SIZE, cx, y, true);
   }
 
   public hide(): void {
@@ -112,7 +113,7 @@ export class StateOverlay {
       style: new TextStyle({
         fill: color,
         fontSize: size,
-        fontFamily: "monospace",
+        fontFamily: HUD.FONT_FAMILY,
         fontWeight: size >= 40 ? "bold" : "normal",
       }),
     });

@@ -4,6 +4,8 @@ import { DifficultySystem } from "./difficulty";
 import { EnemyPool } from "../pool/enemyPool";
 import { WaveSystem } from "./waves";
 import type { Enemy } from "../entities/enemy";
+import { ENEMY, CAMERA, ENEMY_SHAPES } from '../constants';
+import type { EnemyShapeConfig } from '../constants';
 
 export class EnemySystem {
   private enemies: Enemy[] = [];
@@ -18,6 +20,7 @@ export class EnemySystem {
     y: number,
     xp: number,
     isBoss: boolean,
+    color: number,
   ) => void;
   private onPlayerHit?: (damageTaken: number) => void;
   private onWaveStart?: (name: string) => void;
@@ -25,14 +28,14 @@ export class EnemySystem {
   /** Camera viewport — updated by game loop for camera-relative spawning */
   public camX = 0;
   public camY = 0;
-  public viewW = 1280;
-  public viewH = 720;
+  public viewW: number = CAMERA.DEFAULT_VIEWPORT_WIDTH;
+  public viewH: number = CAMERA.DEFAULT_VIEWPORT_HEIGHT;
 
   constructor(
     container: Container,
     player: Player,
     difficulty: DifficultySystem,
-    onEnemyDied?: (x: number, y: number, xp: number, isBoss: boolean) => void,
+    onEnemyDied?: (x: number, y: number, xp: number, isBoss: boolean, color: number) => void,
     onPlayerHit?: (damageTaken: number) => void,
     onWaveStart?: (name: string) => void,
   ) {
@@ -77,6 +80,7 @@ export class EnemySystem {
           enemy.sprite.y,
           enemy.xpValue,
           enemy.isBoss,
+          enemy.baseColor,
         );
         this.pool.release(enemy);
         continue;
@@ -109,7 +113,8 @@ export class EnemySystem {
     xp: number,
     isBoss: boolean,
   ): void {
-    const enemy = this.pool.acquire(x, y, hp, speed, xp, isBoss);
+    const shapeConfig = isBoss ? undefined : this.randomShapeConfig();
+    const enemy = this.pool.acquire(x, y, hp, speed, xp, isBoss, shapeConfig);
     this.enemies.push(enemy);
   }
 
@@ -137,6 +142,10 @@ export class EnemySystem {
     );
   }
 
+  private randomShapeConfig(): EnemyShapeConfig {
+    return ENEMY_SHAPES[Math.floor(Math.random() * ENEMY_SHAPES.length)];
+  }
+
   /** Release all active enemies and destroy the free pool — call before game reset */
   public reset(): void {
     for (const enemy of this.enemies) {
@@ -149,7 +158,7 @@ export class EnemySystem {
   }
 
   private randomEdgePosition(): [number, number] {
-    const margin = 100;
+    const margin = ENEMY.SPAWN_MARGIN;
     const side = Math.floor(Math.random() * 4);
     switch (side) {
       case 0:

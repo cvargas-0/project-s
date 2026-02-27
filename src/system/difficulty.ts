@@ -1,4 +1,5 @@
 import type { EventSystem } from "./events";
+import { DIFFICULTY } from '../constants';
 
 export class DifficultySystem {
   private elapsedMs = 0;
@@ -19,54 +20,52 @@ export class DifficultySystem {
    * Combined difficulty factor: time contributes a base ramp,
    * player level adds an extra push so levelling up makes the
    * game harder even if time hasn't advanced much.
-   *
-   * tier 0 at start, roughly +1 every 20s of play, +0.5 per player level above 1.
    */
   private get tier(): number {
-    return this.elapsedSeconds / 20 + (this.getPlayerLevel() - 1) * 0.5;
+    return this.elapsedSeconds / DIFFICULTY.TIME_DIVISOR + (this.getPlayerLevel() - 1) * DIFFICULTY.LEVEL_WEIGHT;
   }
 
-  /** Spawn interval in ms — drops fast: 1000 → 150 floor */
+  /** Spawn interval in ms — drops fast */
   get spawnInterval(): number {
-    const base = Math.max(150, 1000 - this.tier * 60);
+    const base = Math.max(DIFFICULTY.SPAWN_INTERVAL_FLOOR, DIFFICULTY.SPAWN_INTERVAL_BASE - this.tier * DIFFICULTY.SPAWN_INTERVAL_REDUCTION);
     return base / (this.events?.spawnRateMultiplier ?? 1);
   }
 
   /** Enemy HP — grows with tier */
   get enemyHp(): number {
-    const base = 3 + Math.floor(this.tier * 0.8);
+    const base = DIFFICULTY.ENEMY_HP_BASE + Math.floor(this.tier * DIFFICULTY.ENEMY_HP_PER_TIER);
     return Math.round(base * (this.events?.enemyHpMultiplier ?? 1));
   }
 
-  /** Enemy move speed — grows with tier, cap at 4.0 */
+  /** Enemy move speed — grows with tier, capped */
   get enemySpeed(): number {
-    const base = Math.min(4.0, 1.5 + this.tier * 0.12);
+    const base = Math.min(DIFFICULTY.ENEMY_SPEED_CAP, DIFFICULTY.ENEMY_SPEED_BASE + this.tier * DIFFICULTY.ENEMY_SPEED_PER_TIER);
     return base * (this.events?.enemySpeedMultiplier ?? 1);
   }
 
   /** Enemy XP reward — scales with tier so higher levels still feel rewarding */
   get enemyXp(): number {
-    return Math.floor(20 * (1 + this.tier * 0.15));
+    return Math.floor(DIFFICULTY.ENEMY_XP_BASE * (1 + this.tier * DIFFICULTY.ENEMY_XP_TIER_SCALE));
   }
 
   /** Boss HP — scales with tier + boss count */
   get bossHp(): number {
-    return Math.round((25 + this.bossCount * 10) * (1 + this.tier * 0.1));
+    return Math.round((DIFFICULTY.BOSS_HP_BASE + this.bossCount * DIFFICULTY.BOSS_HP_PER_COUNT) * (1 + this.tier * DIFFICULTY.BOSS_HP_TIER_SCALE));
   }
 
-  /** Boss XP — always 8× the current regular enemy drop */
+  /** Boss XP — always N× the current regular enemy drop */
   get bossXp(): number {
-    return this.enemyXp * 8;
+    return this.enemyXp * DIFFICULTY.BOSS_XP_MULTIPLIER;
   }
 
   /** Number of orbs a normal enemy drops — increases with tier */
   get enemyOrbCount(): number {
-    return 1 + Math.floor(this.tier / 4);
+    return 1 + Math.floor(this.tier / DIFFICULTY.ORB_TIER_DIVISOR);
   }
 
-  /** Number of orbs a boss drops — always 3× enemy orb count */
+  /** Number of orbs a boss drops — always N× enemy orb count */
   get bossOrbCount(): number {
-    return this.enemyOrbCount * 3;
+    return this.enemyOrbCount * DIFFICULTY.BOSS_ORB_MULTIPLIER;
   }
 
   update(deltaMs: number): void {
@@ -75,10 +74,9 @@ export class DifficultySystem {
 
   /**
    * Returns true exactly once when each boss threshold is crossed.
-   * Bosses spawn at 2:00, 3:30, 5:00, 6:30... (every 90s after first at 120s)
    */
   checkBossSpawn(): boolean {
-    const nextThreshold = 120 + this.bossCount * 90;
+    const nextThreshold = DIFFICULTY.BOSS_FIRST_SPAWN_TIME + this.bossCount * DIFFICULTY.BOSS_SPAWN_INTERVAL;
     if (this.elapsedSeconds >= nextThreshold) {
       this.bossCount++;
       return true;

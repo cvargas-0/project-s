@@ -10,15 +10,15 @@ export class ProjectilePool {
 
   constructor(private container: Container) {}
 
-  acquire(x: number, y: number, dx: number, dy: number, damage: number, speed: number): Projectile {
+  acquire(x: number, y: number, dx: number, dy: number, damage: number, speed: number, piercing = 0, homing = false): Projectile {
     const p = this.free.pop();
     if (p) {
-      p.reset(x, y, dx, dy, damage, speed);
+      p.reset(x, y, dx, dy, damage, speed, piercing, homing);
       this.container.addChild(p.sprite);
       return p;
     }
     // Pool empty — allocate a new one and add to container
-    const fresh = new Projectile(x, y, dx, dy, damage, speed);
+    const fresh = new Projectile(x, y, dx, dy, damage, speed, piercing, homing);
     this.container.addChild(fresh.sprite);
     return fresh;
   }

@@ -1,20 +1,19 @@
 import { Graphics } from "pixi.js";
 import type { Player } from "./player";
 import type { PlayerStats } from "../core/playerStats";
+import { XP_ORB, COLORS } from '../constants';
 
 export class XpOrb {
   public sprite: Graphics;
   public isAlive = true;
   public readonly xpValue: number;
 
-  private readonly collectRange = 18;
-
   constructor(x: number, y: number, xpValue: number) {
     this.xpValue = xpValue;
 
     this.sprite = new Graphics();
-    this.sprite.circle(0, 0, 7);
-    this.sprite.fill(0xa78bfa); // violet
+    this.sprite.circle(0, 0, XP_ORB.RADIUS);
+    this.sprite.fill(COLORS.XP_ORB);
     this.sprite.x = x;
     this.sprite.y = y;
   }
@@ -27,14 +26,14 @@ export class XpOrb {
     const dy = player.sprite.y - this.sprite.y;
     const dist = Math.hypot(dx, dy);
 
-    if (dist <= this.collectRange) {
+    if (dist <= XP_ORB.COLLECT_RANGE) {
       this.isAlive = false;
       return this.xpValue;
     }
 
     if (dist < stats.attractRange) {
       // Always faster than the player so orbs never lag behind
-      const speed = (stats.speed + 2) * 1.5;
+      const speed = (stats.speed + XP_ORB.ATTRACT_SPEED_OFFSET) * XP_ORB.ATTRACT_SPEED_MULTIPLIER;
       this.sprite.x += (dx / dist) * speed * delta;
       this.sprite.y += (dy / dist) * speed * delta;
     }

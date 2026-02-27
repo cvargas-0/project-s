@@ -1,3 +1,5 @@
+import { COLORS, EVENTS } from '../constants';
+
 interface GameEvent {
   name: string;
   color: number;
@@ -9,30 +11,30 @@ interface GameEvent {
 const EVENT_POOL: GameEvent[] = [
   {
     name: "Swarm!",
-    color: 0xf97316,
-    duration: 15_000,
-    apply: (s) => { s.spawnRateMultiplier = 2; },
+    color: COLORS.EVENT_SWARM,
+    duration: EVENTS.SWARM_DURATION,
+    apply: (s) => { s.spawnRateMultiplier = EVENTS.SWARM_SPAWN_RATE; },
     revert: (s) => { s.spawnRateMultiplier = 1; },
   },
   {
     name: "Berserker!",
-    color: 0xef4444,
-    duration: 10_000,
-    apply: (s) => { s.damageMultiplier = 2; },
+    color: COLORS.EVENT_BERSERKER,
+    duration: EVENTS.BERSERKER_DURATION,
+    apply: (s) => { s.damageMultiplier = EVENTS.BERSERKER_DAMAGE; },
     revert: (s) => { s.damageMultiplier = 1; },
   },
   {
     name: "Frost",
-    color: 0x38bdf8,
-    duration: 12_000,
-    apply: (s) => { s.enemySpeedMultiplier = 0.5; },
+    color: COLORS.EVENT_FROST,
+    duration: EVENTS.FROST_DURATION,
+    apply: (s) => { s.enemySpeedMultiplier = EVENTS.FROST_SPEED_MULTIPLIER; },
     revert: (s) => { s.enemySpeedMultiplier = 1; },
   },
   {
     name: "Blood Moon",
-    color: 0xdc2626,
-    duration: 20_000,
-    apply: (s) => { s.enemyHpMultiplier = 2; s.xpMultiplier = 2; },
+    color: COLORS.EVENT_BLOOD_MOON,
+    duration: EVENTS.BLOOD_MOON_DURATION,
+    apply: (s) => { s.enemyHpMultiplier = EVENTS.BLOOD_MOON_HP_MULTIPLIER; s.xpMultiplier = EVENTS.BLOOD_MOON_XP_MULTIPLIER; },
     revert: (s) => { s.enemyHpMultiplier = 1; s.xpMultiplier = 1; },
   },
 ];
@@ -58,7 +60,7 @@ export class EventSystem {
   ) {
     this.onStart = onStart;
     this.onEnd = onEnd;
-    this.cooldown = 60_000 + Math.random() * 30_000;
+    this.cooldown = EVENTS.COOLDOWN_BASE + Math.random() * EVENTS.COOLDOWN_VARIANCE;
   }
 
   update(deltaMs: number): void {
@@ -68,7 +70,7 @@ export class EventSystem {
         this.activeEvent.revert(this);
         this.activeEvent = null;
         this.onEnd?.();
-        this.cooldown = 60_000 + Math.random() * 30_000;
+        this.cooldown = EVENTS.COOLDOWN_BASE + Math.random() * EVENTS.COOLDOWN_VARIANCE;
       }
       return;
     }
@@ -98,7 +100,7 @@ export class EventSystem {
       this.activeEvent.revert(this);
       this.activeEvent = null;
     }
-    this.cooldown = 60_000 + Math.random() * 30_000;
+    this.cooldown = EVENTS.COOLDOWN_BASE + Math.random() * EVENTS.COOLDOWN_VARIANCE;
     this.activeTimer = 0;
     this.lastIndex = -1;
   }

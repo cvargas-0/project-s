@@ -1,19 +1,44 @@
 import type { PlayerStats } from "../core/playerStats";
+import {
+  COLORS,
+  RARITY_WEIGHTS as WEIGHTS,
+  STAT_FLOORS,
+  UP_SWIFT_FEET,
+  UP_SHARP_EDGE,
+  UP_RAPID_FIRE,
+  UP_VITALITY,
+  UP_IRON_HIDE,
+  UP_REGENERATION,
+  UP_MAGNETISM,
+  UP_MULTISHOT,
+  UP_SWIFT_SHOT,
+  UP_BLITZ,
+  UP_THICK_SKIN,
+  UP_ADRENALINE,
+  UP_HEAVY_ROUNDS,
+  UP_SECOND_WIND,
+  UP_OVERCHARGE,
+  UP_GLASS_CANNON,
+  UP_MAGNETAR,
+  UP_BARRAGE,
+  UP_FORTRESS,
+  UP_ORBITAL_SHIELD,
+} from '../constants';
 
 export type Rarity = "common" | "rare" | "epic" | "legendary";
 
 export const RARITY_COLORS: Record<Rarity, number> = {
-  common: 0x94a3b8, // grey
-  rare: 0x38bdf8, // blue
-  epic: 0xa78bfa, // purple
-  legendary: 0xfbbf24, // gold
+  common: COLORS.RARITY_COMMON,
+  rare: COLORS.RARITY_RARE,
+  epic: COLORS.RARITY_EPIC,
+  legendary: COLORS.RARITY_LEGENDARY,
 };
 
 export const RARITY_WEIGHTS: Record<Rarity, number> = {
-  common: 50,
-  rare: 30,
-  epic: 15,
-  legendary: 5,
+  common: WEIGHTS.COMMON,
+  rare: WEIGHTS.RARE,
+  epic: WEIGHTS.EPIC,
+  legendary: WEIGHTS.LEGENDARY,
 };
 
 export interface Upgrade {
@@ -32,7 +57,7 @@ export const ALL_UPGRADES: Upgrade[] = [
     description: "+20% movement speed",
     rarity: "common",
     apply(stats) {
-      stats.speed *= 1.2;
+      stats.speed *= UP_SWIFT_FEET.SPEED_MULT;
     },
   },
   {
@@ -41,7 +66,7 @@ export const ALL_UPGRADES: Upgrade[] = [
     description: "+1 damage per projectile",
     rarity: "common",
     apply(stats) {
-      stats.damage += 1;
+      stats.damage += UP_SHARP_EDGE.DAMAGE_ADD;
     },
   },
   {
@@ -50,7 +75,7 @@ export const ALL_UPGRADES: Upgrade[] = [
     description: "-15% time between attacks",
     rarity: "common",
     apply(stats) {
-      stats.attackInterval = Math.max(150, stats.attackInterval * 0.85);
+      stats.attackInterval = Math.max(STAT_FLOORS.ATTACK_INTERVAL, stats.attackInterval * UP_RAPID_FIRE.INTERVAL_MULT);
     },
   },
   {
@@ -59,8 +84,8 @@ export const ALL_UPGRADES: Upgrade[] = [
     description: "+3 max HP, restore 3 HP",
     rarity: "common",
     apply(stats, heal) {
-      stats.maxHp += 3;
-      heal(3);
+      stats.maxHp += UP_VITALITY.MAX_HP_ADD;
+      heal(UP_VITALITY.HEAL);
     },
   },
   {
@@ -69,7 +94,7 @@ export const ALL_UPGRADES: Upgrade[] = [
     description: "+1 armor (reduce damage taken)",
     rarity: "common",
     apply(stats) {
-      stats.armor += 1;
+      stats.armor += UP_IRON_HIDE.ARMOR_ADD;
     },
   },
   {
@@ -78,7 +103,7 @@ export const ALL_UPGRADES: Upgrade[] = [
     description: "Recover 1 HP every 4 seconds",
     rarity: "common",
     apply(stats) {
-      stats.regenRate += 0.25;
+      stats.regenRate += UP_REGENERATION.REGEN_ADD;
     },
   },
   {
@@ -87,7 +112,7 @@ export const ALL_UPGRADES: Upgrade[] = [
     description: "+40% orb attract range",
     rarity: "common",
     apply(stats) {
-      stats.attractRange *= 1.4;
+      stats.attractRange *= UP_MAGNETISM.ATTRACT_MULT;
     },
   },
 
@@ -98,7 +123,7 @@ export const ALL_UPGRADES: Upgrade[] = [
     description: "+1 projectile per attack",
     rarity: "rare",
     apply(stats) {
-      stats.projectileCount += 1;
+      stats.projectileCount += UP_MULTISHOT.PROJECTILE_ADD;
     },
   },
   {
@@ -107,7 +132,7 @@ export const ALL_UPGRADES: Upgrade[] = [
     description: "+30% projectile speed",
     rarity: "rare",
     apply(stats) {
-      stats.projectileSpeed *= 1.3;
+      stats.projectileSpeed *= UP_SWIFT_SHOT.PROJ_SPEED_MULT;
     },
   },
   {
@@ -116,8 +141,8 @@ export const ALL_UPGRADES: Upgrade[] = [
     description: "+15% move speed, -10% attack interval",
     rarity: "rare",
     apply(stats) {
-      stats.speed *= 1.15;
-      stats.attackInterval = Math.max(150, stats.attackInterval * 0.9);
+      stats.speed *= UP_BLITZ.SPEED_MULT;
+      stats.attackInterval = Math.max(STAT_FLOORS.ATTACK_INTERVAL, stats.attackInterval * UP_BLITZ.INTERVAL_MULT);
     },
   },
   {
@@ -126,8 +151,8 @@ export const ALL_UPGRADES: Upgrade[] = [
     description: "+2 armor, -10% move speed",
     rarity: "rare",
     apply(stats) {
-      stats.armor += 2;
-      stats.speed *= 0.9;
+      stats.armor += UP_THICK_SKIN.ARMOR_ADD;
+      stats.speed *= UP_THICK_SKIN.SPEED_MULT;
     },
   },
   {
@@ -136,8 +161,8 @@ export const ALL_UPGRADES: Upgrade[] = [
     description: "-25% attack interval, -2 max HP",
     rarity: "rare",
     apply(stats) {
-      stats.attackInterval = Math.max(150, stats.attackInterval * 0.75);
-      stats.maxHp = Math.max(1, stats.maxHp - 2);
+      stats.attackInterval = Math.max(STAT_FLOORS.ATTACK_INTERVAL, stats.attackInterval * UP_ADRENALINE.INTERVAL_MULT);
+      stats.maxHp = Math.max(STAT_FLOORS.HP, stats.maxHp - UP_ADRENALINE.MAX_HP_SUB);
     },
   },
   {
@@ -146,8 +171,8 @@ export const ALL_UPGRADES: Upgrade[] = [
     description: "+2 damage, -20% projectile speed",
     rarity: "rare",
     apply(stats) {
-      stats.damage += 2;
-      stats.projectileSpeed *= 0.8;
+      stats.damage += UP_HEAVY_ROUNDS.DAMAGE_ADD;
+      stats.projectileSpeed *= UP_HEAVY_ROUNDS.PROJ_SPEED_MULT;
     },
   },
   {
@@ -156,8 +181,8 @@ export const ALL_UPGRADES: Upgrade[] = [
     description: "+0.5 HP/s regen, -1 armor",
     rarity: "rare",
     apply(stats) {
-      stats.regenRate += 0.5;
-      stats.armor = Math.max(0, stats.armor - 1);
+      stats.regenRate += UP_SECOND_WIND.REGEN_ADD;
+      stats.armor = Math.max(STAT_FLOORS.ARMOR, stats.armor - UP_SECOND_WIND.ARMOR_SUB);
     },
   },
 
@@ -168,8 +193,8 @@ export const ALL_UPGRADES: Upgrade[] = [
     description: "+3 damage, +20% attack interval",
     rarity: "epic",
     apply(stats) {
-      stats.damage += 3;
-      stats.attackInterval *= 1.2;
+      stats.damage += UP_OVERCHARGE.DAMAGE_ADD;
+      stats.attackInterval *= UP_OVERCHARGE.INTERVAL_MULT;
     },
   },
   {
@@ -178,8 +203,8 @@ export const ALL_UPGRADES: Upgrade[] = [
     description: "+4 damage, -4 max HP",
     rarity: "epic",
     apply(stats) {
-      stats.damage += 4;
-      stats.maxHp = Math.max(1, stats.maxHp - 4);
+      stats.damage += UP_GLASS_CANNON.DAMAGE_ADD;
+      stats.maxHp = Math.max(STAT_FLOORS.HP, stats.maxHp - UP_GLASS_CANNON.MAX_HP_SUB);
     },
   },
   {
@@ -188,8 +213,8 @@ export const ALL_UPGRADES: Upgrade[] = [
     description: "+100% orb range, -15% move speed",
     rarity: "epic",
     apply(stats) {
-      stats.attractRange *= 2;
-      stats.speed *= 0.85;
+      stats.attractRange *= UP_MAGNETAR.ATTRACT_MULT;
+      stats.speed *= UP_MAGNETAR.SPEED_MULT;
     },
   },
   {
@@ -198,8 +223,8 @@ export const ALL_UPGRADES: Upgrade[] = [
     description: "+2 projectiles, -30% projectile speed",
     rarity: "epic",
     apply(stats) {
-      stats.projectileCount += 2;
-      stats.projectileSpeed *= 0.7;
+      stats.projectileCount += UP_BARRAGE.PROJECTILE_ADD;
+      stats.projectileSpeed *= UP_BARRAGE.PROJ_SPEED_MULT;
     },
   },
   {
@@ -208,13 +233,50 @@ export const ALL_UPGRADES: Upgrade[] = [
     description: "+3 armor, +5 max HP, -25% move speed",
     rarity: "epic",
     apply(stats) {
-      stats.armor += 3;
-      stats.maxHp += 5;
-      stats.speed *= 0.75;
+      stats.armor += UP_FORTRESS.ARMOR_ADD;
+      stats.maxHp += UP_FORTRESS.MAX_HP_ADD;
+      stats.speed *= UP_FORTRESS.SPEED_MULT;
+    },
+  },
+
+  {
+    id: "piercing_shot",
+    name: "Piercing Shot",
+    description: "+1 pierce (projectiles pass through enemies)",
+    rarity: "epic",
+    apply(stats) {
+      stats.piercingCount += 1;
+    },
+  },
+  {
+    id: "homing_missiles",
+    name: "Homing Missiles",
+    description: "Projectiles curve toward nearby enemies",
+    rarity: "epic",
+    apply(stats) {
+      stats.homingEnabled = true;
     },
   },
 
   // ── Legendary ───────────────────────────────────────
+  {
+    id: "orbital_shield",
+    name: "Orbital Shield",
+    description: "+3 orbs rotate around you, damaging enemies",
+    rarity: "legendary",
+    apply(stats) {
+      stats.orbitalCount += UP_ORBITAL_SHIELD.ORB_COUNT;
+    },
+  },
+  {
+    id: "nova_burst",
+    name: "Nova Burst",
+    description: "Periodic AoE explosion damages nearby enemies",
+    rarity: "legendary",
+    apply(stats) {
+      stats.novaEnabled = true;
+    },
+  },
   {
     id: "magnetize",
     name: "Magnetize",

@@ -17,9 +17,7 @@ import { StateOverlay } from "../ui/overlay";
 import { createRunStats, type RunStats } from "./runStats";
 import { EventSystem } from "../system/events";
 import { Camera } from "./camera";
-
-const WORLD_W = 3000;
-const WORLD_H = 3000;
+import { WORLD, COLORS, PARTICLES, WAVE_TIMING } from '../constants';
 
 export class Game {
   private app!: Application;
@@ -49,7 +47,7 @@ export class Game {
     this.app = new Application();
 
     await this.app.init({
-      backgroundColor: 0x0f172a,
+      backgroundColor: COLORS.BACKGROUND,
       antialias: false,
       resizeTo: window,
     });
@@ -124,10 +122,10 @@ export class Game {
     this.world = new Container();
     this.app.stage.addChild(this.world);
 
-    this.camera = new Camera(WORLD_W, WORLD_H);
+    this.camera = new Camera(WORLD.WIDTH, WORLD.HEIGHT);
     this.screenShake = new ScreenShake();
 
-    this.player = new Player(WORLD_W / 2, WORLD_H / 2, this.stats, WORLD_W, WORLD_H);
+    this.player = new Player(WORLD.WIDTH / 2, WORLD.HEIGHT / 2, this.stats, WORLD.WIDTH, WORLD.HEIGHT);
     this.world.addChild(this.player.sprite);
 
     this.xpSystem = new XpSystem(this.world, this.stats, (amount) => {
@@ -139,7 +137,7 @@ export class Game {
       this.world,
       this.player,
       this.difficulty,
-      (x, y, baseXp, isBoss) => {
+      (x, y, baseXp, isBoss, color) => {
         if (isBoss) this.runStats.bossesKilled++;
         else this.runStats.enemiesKilled++;
 
@@ -162,8 +160,8 @@ export class Game {
         this.particles.burst(
           x,
           y,
-          isBoss ? 0xf97316 : 0xef4444,
-          isBoss ? 20 : 10,
+          color,
+          isBoss ? PARTICLES.ENEMY_DEATH_BOSS : PARTICLES.ENEMY_DEATH_NORMAL,
         );
         if (isBoss) this.screenShake.trigger(10, 500);
       },
@@ -171,7 +169,7 @@ export class Game {
         this.runStats.totalDamageTaken += dmg;
         this.screenShake.trigger(5, 300);
       },
-      (waveName) => this.hud.showBanner(waveName, 0xfbbf24, 3000),
+      (waveName) => this.hud.showBanner(waveName, COLORS.WAVE_ENCIRCLEMENT, WAVE_TIMING.BANNER_DURATION),
     );
 
     this.combatSystem = new CombatSystem(
@@ -181,6 +179,7 @@ export class Game {
       () => this.enemySystem.getEnemies(),
       (amount) => { this.runStats.totalDamageDealt += amount; },
       () => this.events.damageMultiplier,
+      (x, y) => this.particles.burst(x, y, COLORS.NOVA_BURST, PARTICLES.NOVA_BURST_COUNT),
     );
 
     // UI stays on stage — unaffected by world shake
